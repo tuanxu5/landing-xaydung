@@ -91,7 +91,7 @@ export const bookingsApi = {
    * Create a new booking
    */
   create: async (data: CreateBookingDto): Promise<Booking> => {
-    const response = await apiClient.post<Booking>('/api/bookings', data);
+    const response = await apiClient.post<Booking>('/bookings', data);
     return response.data;
   },
 
@@ -99,7 +99,7 @@ export const bookingsApi = {
    * Get all bookings with optional filters and pagination
    */
   getAll: async (filters?: BookingFilters): Promise<PaginatedBookings> => {
-    const response = await apiClient.get<PaginatedBookings>('/api/bookings', {
+    const response = await apiClient.get<PaginatedBookings>('/bookings', {
       params: filters,
     });
     return response.data;
@@ -109,7 +109,7 @@ export const bookingsApi = {
    * Get a single booking by ID
    */
   getById: async (id: string): Promise<Booking> => {
-    const response = await apiClient.get<Booking>(`/api/bookings/${id}`);
+    const response = await apiClient.get<Booking>(`/bookings/${id}`);
     return response.data;
   },
 
@@ -117,7 +117,7 @@ export const bookingsApi = {
    * Update booking status
    */
   updateStatus: async (id: string, data: UpdateBookingDto): Promise<Booking> => {
-    const response = await apiClient.patch<Booking>(`/api/bookings/${id}`, data);
+    const response = await apiClient.patch<Booking>(`/bookings/${id}`, data);
     return response.data;
   },
 };
@@ -176,7 +176,7 @@ export const authApi = {
    * Login with username and password
    */
   login: async (data: LoginDto): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>('/api/auth/login', data);
+    const response = await apiClient.post<LoginResponse>('/auth/login', data);
     return response.data;
   },
 
@@ -184,21 +184,21 @@ export const authApi = {
    * Logout and invalidate session
    */
   logout: async (): Promise<void> => {
-    await apiClient.post('/api/auth/logout');
+    await apiClient.post('/auth/logout');
   },
 
   /**
    * Change password
    */
   changePassword: async (data: ChangePasswordDto): Promise<void> => {
-    await apiClient.post('/api/auth/change-password', data);
+    await apiClient.post('/auth/change-password', data);
   },
 
   /**
    * Get current authenticated administrator
    */
   me: async (): Promise<Administrator> => {
-    const response = await apiClient.get<Administrator>('/api/auth/me');
+    const response = await apiClient.get<Administrator>('/auth/me');
     return response.data;
   },
 };

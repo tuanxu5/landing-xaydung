@@ -21,7 +21,7 @@ import {
   AdministratorDocument,
 } from './schemas/administrator.schema';
 
-@Controller('api/auth')
+@Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -30,7 +30,7 @@ export class AuthController {
   ) {}
 
   /**
-   * POST /api/auth/login
+   * POST /auth/login
    * Authenticate administrator and create session
    * Public endpoint - no authentication required
    */
@@ -60,7 +60,7 @@ export class AuthController {
   }
 
   /**
-   * POST /api/auth/logout
+   * POST /auth/logout
    * Terminate administrator session
    * Requires authentication
    */
@@ -79,7 +79,7 @@ export class AuthController {
   }
 
   /**
-   * POST /api/auth/change-password
+   * POST /auth/change-password
    * Change administrator password
    * Requires authentication
    */
@@ -127,7 +127,7 @@ export class AuthController {
   }
 
   /**
-   * GET /api/auth/me
+   * GET /auth/me
    * Retrieve current authenticated administrator
    * Requires authentication
    */

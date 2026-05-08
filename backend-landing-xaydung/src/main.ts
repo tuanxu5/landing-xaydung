@@ -20,7 +20,7 @@ async function bootstrap() {
   // Security: Configure CORS policy for authorized origins
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['http://localhost:3001', 'http://localhost:3000'];
+    : ['http://localhost:3001', 'http://localhost:3000', 'http://localhost:3002'];
 
   app.enableCors({
     origin: (origin, callback) => {

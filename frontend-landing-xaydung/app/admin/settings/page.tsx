@@ -1,67 +1,59 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon } from 'lucide-react';
-import { api } from '@/lib/api';
-import { Button, Input, Textarea, useSnackbar } from '@/components/ui';
+import { User, Lock } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { authApi } from '@/lib/api';
+import { Button, Input, useSnackbar } from '@/components/ui';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 
-interface SettingsData {
-  siteName?: string;
-  siteDescription?: string;
-  address?: string;
-  email?: string;
-  phone?: string;
-  zalo?: string;
-  facebook?: string;
-  youtube?: string;
-  instagram?: string;
-  workingHours?: string;
-  googleMapsUrl?: string;
-}
+type TabType = 'profile' | 'password';
 
 export default function SettingsPage() {
+  const { administrator } = useAuth();
   const snackbar = useSnackbar();
-  const [settings, setSettings] = useState<SettingsData>({});
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabType>('profile');
+  
+  // Password form state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.get('/settings');
-      setSettings(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Không thể tải cài đặt');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      snackbar.error('Mật khẩu mới không khớp!');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      snackbar.error('Mật khẩu mới phải có ít nhất 6 ký tự!');
+      return;
+    }
+
     try {
       setSubmitting(true);
-      setError(null);
-      await api.patch('/settings', settings);
-      snackbar.success('Cài đặt đã được cập nhật thành công!');
+      await authApi.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword,
+      });
+      snackbar.success('Đổi mật khẩu thành công!');
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || 'Có lỗi xảy ra';
-      setError(errorMsg);
+      const errorMsg = err.message || 'Không thể đổi mật khẩu';
       snackbar.error(errorMsg);
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleChange = (field: keyof SettingsData, value: string) => {
-    setSettings((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -70,177 +62,209 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
-              <SettingsIcon className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center shadow-lg shadow-gray-500/30">
+              <User className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Thông tin chung</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Cài đặt tài khoản</h1>
               <p className="text-base text-gray-600">
-                Quản lý thông tin liên hệ và mạng xã hội của website
+                Quản lý thông tin cá nhân và bảo mật
               </p>
             </div>
           </div>
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
-
-        {/* Settings Form */}
-        {loading ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Thông tin website */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                </svg>
-                Thông tin website
-              </h2>
-              <div className="space-y-4">
-                <Input
-                  label="Tên website"
-                  value={settings.siteName || ''}
-                  onChange={(e) => handleChange('siteName', e.target.value)}
-                  placeholder="Vật liệu xây dựng ABC"
-                />
-                <Textarea
-                  label="Mô tả website"
-                  value={settings.siteDescription || ''}
-                  onChange={(e) => handleChange('siteDescription', e.target.value)}
-                  placeholder="Cung cấp vật liệu xây dựng chất lượng cao..."
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            {/* Thông tin liên hệ */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Thông tin liên hệ
-              </h2>
-              <div className="space-y-4">
-                <Textarea
-                  label="Địa chỉ"
-                  value={settings.address || ''}
-                  onChange={(e) => handleChange('address', e.target.value)}
-                  placeholder="123 Đường ABC, Quận XYZ, TP. HCM"
-                  rows={2}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Email"
-                    type="email"
-                    value={settings.email || ''}
-                    onChange={(e) => handleChange('email', e.target.value)}
-                    placeholder="contact@example.com"
-                  />
-                  <Input
-                    label="Số điện thoại"
-                    value={settings.phone || ''}
-                    onChange={(e) => handleChange('phone', e.target.value)}
-                    placeholder="0912345678"
-                  />
-                </div>
-                <Input
-                  label="Zalo"
-                  value={settings.zalo || ''}
-                  onChange={(e) => handleChange('zalo', e.target.value)}
-                  placeholder="0912345678"
-                  helperText="Số điện thoại Zalo để khách hàng liên hệ"
-                />
-                <Textarea
-                  label="Giờ làm việc"
-                  value={settings.workingHours || ''}
-                  onChange={(e) => handleChange('workingHours', e.target.value)}
-                  placeholder="Thứ 2 - Thứ 6: 8:00 - 17:00&#10;Thứ 7: 8:00 - 12:00&#10;Chủ nhật: Nghỉ"
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            {/* Mạng xã hội */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                </svg>
-                Mạng xã hội
-              </h2>
-              <div className="space-y-4">
-                <Input
-                  label="Facebook"
-                  value={settings.facebook || ''}
-                  onChange={(e) => handleChange('facebook', e.target.value)}
-                  placeholder="https://facebook.com/yourpage"
-                  helperText="Link đến trang Facebook của bạn"
-                />
-                <Input
-                  label="YouTube"
-                  value={settings.youtube || ''}
-                  onChange={(e) => handleChange('youtube', e.target.value)}
-                  placeholder="https://youtube.com/@yourchannel"
-                  helperText="Link đến kênh YouTube của bạn"
-                />
-                <Input
-                  label="Instagram"
-                  value={settings.instagram || ''}
-                  onChange={(e) => handleChange('instagram', e.target.value)}
-                  placeholder="https://instagram.com/yourprofile"
-                  helperText="Link đến trang Instagram của bạn"
-                />
-              </div>
-            </div>
-
-            {/* Google Maps */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Bản đồ
-              </h2>
-              <div className="space-y-4">
-                <Textarea
-                  label="Google Maps Embed URL"
-                  value={settings.googleMapsUrl || ''}
-                  onChange={(e) => handleChange('googleMapsUrl', e.target.value)}
-                  placeholder="https://www.google.com/maps/embed?pb=..."
-                  rows={3}
-                  helperText="Link nhúng Google Maps (Share → Embed a map → Copy HTML)"
-                />
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={fetchSettings}
-                disabled={submitting}
+        {/* Tabs */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="border-b border-gray-200">
+            <div className="flex">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`flex-1 px-6 py-4 text-sm font-semibold transition-colors ${
+                  activeTab === 'profile'
+                    ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50/50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
               >
-                Hủy thay đổi
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? 'Đang lưu...' : 'Lưu cài đặt'}
-              </Button>
+                <div className="flex items-center justify-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>Thông tin cá nhân</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('password')}
+                className={`flex-1 px-6 py-4 text-sm font-semibold transition-colors ${
+                  activeTab === 'password'
+                    ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50/50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  <span>Đổi mật khẩu</span>
+                </div>
+              </button>
             </div>
-          </form>
-        )}
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6">
+            {activeTab === 'profile' ? (
+              // Profile Tab
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 pb-6 border-b border-gray-200">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
+                    <span className="text-3xl font-bold text-white">
+                      {administrator?.username?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">{administrator?.username}</h3>
+                    <p className="text-sm text-gray-500">Quản trị viên</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Tên đăng nhập
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900">
+                      {administrator?.username}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900">
+                      {administrator?.email || 'Chưa cập nhật'}
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Đăng nhập lần cuối
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900">
+                      {administrator?.lastLoginAt
+                        ? new Date(administrator.lastLoginAt).toLocaleString('vi-VN', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : 'Chưa có thông tin'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <h4 className="text-sm font-semibold text-blue-900 mb-1">Thông tin chỉ đọc</h4>
+                        <p className="text-sm text-blue-700">
+                          Thông tin tài khoản hiện tại không thể chỉnh sửa. Vui lòng liên hệ quản trị viên cấp cao hơn nếu cần thay đổi.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Password Tab
+              <form onSubmit={handlePasswordChange} className="space-y-6">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <h4 className="text-sm font-semibold text-yellow-900 mb-1">Lưu ý bảo mật</h4>
+                      <p className="text-sm text-yellow-700">
+                        Mật khẩu mới phải có ít nhất 6 ký tự. Nên sử dụng kết hợp chữ hoa, chữ thường, số và ký tự đặc biệt.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Input
+                  label={
+                    <>
+                      Mật khẩu hiện tại <span className="text-red-500">*</span>
+                    </>
+                  }
+                  type="password"
+                  required
+                  value={passwordForm.currentPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                  }
+                  placeholder="Nhập mật khẩu hiện tại"
+                />
+
+                <Input
+                  label={
+                    <>
+                      Mật khẩu mới <span className="text-red-500">*</span>
+                    </>
+                  }
+                  type="password"
+                  required
+                  minLength={6}
+                  value={passwordForm.newPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                  }
+                  placeholder="Nhập mật khẩu mới"
+                  helperText="Tối thiểu 6 ký tự"
+                />
+
+                <Input
+                  label={
+                    <>
+                      Xác nhận mật khẩu mới <span className="text-red-500">*</span>
+                    </>
+                  }
+                  type="password"
+                  required
+                  minLength={6}
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                  }
+                  placeholder="Nhập lại mật khẩu mới"
+                />
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() =>
+                      setPasswordForm({
+                        currentPassword: '',
+                        newPassword: '',
+                        confirmPassword: '',
+                      })
+                    }
+                    disabled={submitting}
+                  >
+                    Hủy
+                  </Button>
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? 'Đang xử lý...' : 'Đổi mật khẩu'}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
       </div>
     </ProtectedRoute>
   );
