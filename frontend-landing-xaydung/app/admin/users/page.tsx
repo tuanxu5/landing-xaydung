@@ -1,34 +1,49 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Users as UsersIcon } from 'lucide-react';
+import { Users as UsersIcon, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui';
 
 interface User {
   _id: string;
+  username: string;
   fullName: string;
   email: string;
-  phone: string;
-  address?: string;
-  city?: string;
-  role: 'admin' | 'user';
-  isActive: boolean;
-  avatar?: string;
+  phone?: string;
+  lastLoginAt?: string;
   createdAt: string;
 }
 
+interface FormData {
+  username: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  password: string;
+}
+
 export default function UsersPage() {
-  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'password'>('create');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState<FormData>({
+    username: '',
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -39,26 +54,90 @@ export default function UsersPage() {
       setLoading(true);
       setError(null);
       const response = await api.get('/users', {
-        params: { page, limit: 20, search: search || undefined },
+        params: { page, limit: 10, search: search || undefined },
       });
       setUsers(response.data.users);
       setTotalPages(response.data.totalPages);
     } catch (err: any) {
-      setError(err.message || 'Không thể tải danh sách người dùng');
+      setError(err.message || 'Không thể tải danh sách tài khoản');
     } finally {
       setLoading(false);
     }
   };
 
+  const openCreateModal = () => {
+    setModalMode('create');
+    setSelectedUser(null);
+    setFormData({ username: '', fullName: '', email: '', phone: '', password: '' });
+    setShowModal(true);
+  };
+
+  const openEditModal = (user: User) => {
+    setModalMode('edit');
+    setSelectedUser(user);
+    setFormData({
+      username: user.username,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone || '',
+      password: '',
+    });
+    setShowModal(true);
+  };
+
+  const openPasswordModal = (user: User) => {
+    setModalMode('password');
+    setSelectedUser(user);
+    setFormData({ username: '', fullName: '', email: '', phone: '', password: '' });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedUser(null);
+    setFormData({ username: '', fullName: '', email: '', phone: '', password: '' });
+    setError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      if (modalMode === 'create') {
+        await api.post('/users', formData);
+      } else if (modalMode === 'edit' && selectedUser) {
+        const updateData: any = {
+          username: formData.username,
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+        };
+        await api.patch(`/users/${selectedUser._id}`, updateData);
+      } else if (modalMode === 'password' && selectedUser) {
+        await api.patch(`/users/${selectedUser._id}`, { password: formData.password });
+      }
+
+      await fetchUsers();
+      closeModal();
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Có lỗi xảy ra');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
+    if (!confirm('Bạn có chắc muốn xóa tài khoản này?')) return;
+    
     try {
       setDeletingId(id);
       setError(null);
       await api.delete(`/users/${id}`);
       await fetchUsers();
-      setDeleteConfirmId(null);
     } catch (err: any) {
-      setError(err.message || 'Không thể xóa người dùng');
+      setError(err.message || 'Không thể xóa tài khoản');
     } finally {
       setDeletingId(null);
     }
@@ -68,43 +147,12 @@ export default function UsersPage() {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
       year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex-1">
-              <div className="h-9 bg-gray-200 rounded-lg w-64 mb-2 animate-pulse"></div>
-              <div className="h-5 bg-gray-200 rounded-lg w-96 animate-pulse"></div>
-            </div>
-            <div className="h-12 bg-gray-200 rounded-xl w-48 animate-pulse"></div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-              <div className="h-56 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 animate-pulse rounded-xl mb-4"></div>
-              <div className="px-2">
-                <div className="h-6 bg-gray-200 rounded-lg w-full mb-3 animate-pulse"></div>
-                <div className="h-4 bg-gray-200 rounded-lg w-32 mb-5 animate-pulse"></div>
-                <div className="flex items-center gap-2 pt-5 border-t border-gray-100">
-                  <div className="flex-1 h-11 bg-gray-200 rounded-xl animate-pulse"></div>
-                  <div className="h-11 w-11 bg-gray-200 rounded-xl animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
@@ -112,224 +160,316 @@ export default function UsersPage() {
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Quản lý Người dùng</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Quản lý Tài khoản</h1>
             <p className="mt-1 text-base text-gray-600">
-              Quản lý khách hàng và tài khoản quản trị viên.
+              Quản lý tài khoản đăng nhập hệ thống.
             </p>
           </div>
-          <Button
-            onClick={() => router.push('/admin/users/new')}
-            leftIcon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            }
-          >
-            Thêm người dùng
+          <Button onClick={openCreateModal}>
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Thêm tài khoản
           </Button>
         </div>
+      </div>
+
+      {/* Search */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Tìm kiếm theo tên, username, email, số điện thoại..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
       </div>
 
       {/* Error message */}
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3 flex-1">
-              <h3 className="text-sm font-medium text-red-800">Lỗi</h3>
-              <p className="mt-1 text-sm text-red-700">{error}</p>
-              <button
-                onClick={fetchUsers}
-                className="mt-2 text-sm font-medium text-red-800 hover:text-red-900 underline cursor-pointer transition-colors"
-              >
-                Thử lại
-              </button>
-            </div>
-          </div>
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
-      {/* Users Grid */}
-      {users.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-              <UsersIcon className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">Chưa có người dùng</h3>
-            <p className="text-sm text-gray-500 mb-6">
-              Bắt đầu bằng cách thêm người dùng đầu tiên.
-            </p>
-            <Button
-              onClick={() => router.push('/admin/users/new')}
-              leftIcon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              }
-            >
-              Thêm người dùng
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {users.map((user) => (
-            <div
-              key={user._id}
-              className="group cursor-pointer bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-primary-200 p-3"
-            >
-              {/* User Avatar */}
-              <div className="relative h-56 bg-gradient-to-br from-purple-50 via-purple-100 to-purple-200 flex flex-col items-center justify-center overflow-hidden rounded-xl mb-4">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/20 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-                
-                {user.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.fullName}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg relative z-10"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center border-4 border-white shadow-lg relative z-10">
-                    <span className="text-3xl font-bold text-purple-600">
-                      {user.fullName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                
-                {/* Role Badge */}
-                <div className="absolute top-3 right-3 z-20">
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 backdrop-blur-sm rounded-full text-xs font-semibold shadow-lg ${
-                    user.role === 'admin' 
-                      ? 'bg-purple-500/95 text-white' 
-                      : 'bg-white/95 text-blue-700'
-                  }`}>
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span>{user.role === 'admin' ? 'Admin' : 'Khách hàng'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="px-2">
-                {/* Name */}
-                <h3 className="text-xl font-bold text-gray-900 line-clamp-1 group-hover:text-primary-600 transition-colors leading-tight mb-2">
-                  {user.fullName}
-                </h3>
-                
-                {/* Contact Info */}
-                <div className="space-y-1.5 mb-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg className="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <span className="truncate">{user.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg className="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    <span>{user.phone}</span>
-                  </div>
-                  {user.city && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg className="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="truncate">{user.city}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Date & Status */}
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                  <span>Tham gia: {formatDate(user.createdAt)}</span>
-                  {!user.isActive && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      Tạm khóa
-                    </span>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                  {deleteConfirmId === user._id ? (
-                    <div className="flex items-center justify-between w-full gap-3">
-                      <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Xác nhận xóa?</span>
-                      <div className="flex gap-2">
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Username
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Họ tên
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Số điện thoại
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Đăng nhập cuối
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    Đang tải...
+                  </td>
+                </tr>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <UsersIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500">Chưa có tài khoản nào</p>
+                  </td>
+                </tr>
+              ) : (
+                users.map((user) => (
+                  <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                          <span className="text-sm font-bold text-primary-700">
+                            {user.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="ml-3">
+                          <div className="text-sm font-semibold text-gray-900">{user.username}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-700">{user.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-700">{user.phone || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-700">
+                        {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Chưa đăng nhập'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => openEditModal(user)}
+                          className="p-2 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+                          title="Chỉnh sửa"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => openPasswordModal(user)}
+                          className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                          title="Đổi mật khẩu"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                        </button>
                         <button
                           onClick={() => handleDelete(user._id)}
                           disabled={deletingId === user._id}
-                          className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all hover:shadow-lg whitespace-nowrap"
+                          className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Xóa"
                         >
-                          {deletingId === user._id ? 'Đang xóa...' : 'Xóa'}
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirmId(null)}
-                          disabled={deletingId === user._id}
-                          className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all whitespace-nowrap"
-                        >
-                          Hủy
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                         </button>
                       </div>
-                    </div>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => router.push(`/admin/users/${user._id}/edit`)}
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl cursor-pointer transition-all hover:shadow-lg hover:scale-105 whitespace-nowrap"
-                      >
-                        <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        <span>Chỉnh sửa</span>
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirmId(user._id)}
-                        className="inline-flex items-center justify-center p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl cursor-pointer transition-all hover:scale-105"
-                        title="Xóa người dùng"
-                      >
-                        <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-center gap-2">
-          <button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Trước
-          </button>
-          <span className="px-4 py-2 text-sm text-gray-600">
-            Trang {page} / {totalPages}
-          </span>
-          <button
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Sau
-          </button>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Trang {page} / {totalPages}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Trước
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Sau
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">
+                {modalMode === 'create' && 'Thêm tài khoản mới'}
+                {modalMode === 'edit' && 'Chỉnh sửa tài khoản'}
+                {modalMode === 'password' && 'Đổi mật khẩu'}
+              </h2>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
+
+              {modalMode === 'password' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mật khẩu mới *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Nhập mật khẩu mới"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Tối thiểu 6 ký tự</p>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Username *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      minLength={3}
+                      value={formData.username}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="admin hoặc user123"
+                      disabled={modalMode === 'edit'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Họ tên *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="Nguyễn Văn A"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="email@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="0912345678"
+                    />
+                  </div>
+
+                  {modalMode === 'create' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Mật khẩu *
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="••••••••"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Tối thiểu 6 ký tự</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Modal Footer */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Đang xử lý...' : modalMode === 'create' ? 'Tạo tài khoản' : 'Cập nhật'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

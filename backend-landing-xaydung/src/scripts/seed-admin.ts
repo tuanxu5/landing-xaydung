@@ -12,14 +12,18 @@ const SALT_ROUNDS = 10;
 const DEFAULT_ADMIN = {
   username: 'admin',
   password: 'Admin@123',
+  fullName: 'Quản trị viên',
   email: 'admin@xaydung.com',
+  phone: '0901234567',
 };
 
 // Default user account
 const DEFAULT_USER = {
   username: 'user',
   password: 'User@123',
+  fullName: 'Người dùng',
   email: 'user@xaydung.com',
+  phone: '0907654321',
 };
 
 /**
@@ -28,7 +32,9 @@ const DEFAULT_USER = {
 interface Administrator {
   username: string;
   passwordHash: string;
+  fullName: string;
   email: string;
+  phone?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -73,7 +79,9 @@ async function seedAdmin() {
       const administrator: Administrator = {
         username: DEFAULT_ADMIN.username,
         passwordHash: adminPasswordHash,
+        fullName: DEFAULT_ADMIN.fullName,
         email: DEFAULT_ADMIN.email,
+        phone: DEFAULT_ADMIN.phone,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -97,7 +105,9 @@ async function seedAdmin() {
       const user: Administrator = {
         username: DEFAULT_USER.username,
         passwordHash: userPasswordHash,
+        fullName: DEFAULT_USER.fullName,
         email: DEFAULT_USER.email,
+        phone: DEFAULT_USER.phone,
         createdAt: new Date(),
         updatedAt: new Date(),
       };

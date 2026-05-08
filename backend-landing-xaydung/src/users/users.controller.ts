@@ -26,15 +26,11 @@ export class UsersController {
 
   @Get()
   findAll(
-    @Query('role') role?: string,
-    @Query('isActive') isActive?: string,
     @Query('search') search?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
     return this.usersService.findAll({
-      role,
-      isActive: isActive === 'true',
       search,
       page: page ? parseInt(page) : undefined,
       limit: limit ? parseInt(limit) : undefined,

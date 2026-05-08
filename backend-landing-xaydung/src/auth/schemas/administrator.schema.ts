@@ -12,7 +12,13 @@ export class Administrator {
   passwordHash: string;
 
   @Prop({ required: true })
+  fullName: string;
+
+  @Prop({ required: true })
   email: string;
+
+  @Prop()
+  phone?: string;
 
   @Prop({ type: Date })
   lastLoginAt?: Date;
