@@ -25,13 +25,22 @@ export class CategoriesController {
   }
 
   @Get()
-  findAll(
+  async findAll(
     @Query('parent') parent?: string,
     @Query('isActive') isActive?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
   ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    
     return this.categoriesService.findAll({
       parent,
-      isActive: isActive === 'true',
+      isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      page: pageNum,
+      limit: limitNum,
+      search,
     });
   }
 

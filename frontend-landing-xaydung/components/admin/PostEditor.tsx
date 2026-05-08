@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { postsApi, uploadApi } from '@/lib/api';
 import { postFormSchema, formatZodErrors, type PostFormData } from '@/lib/validation';
-import { Card, Input, Button } from '@/components/ui';
+import { Card, Input, Button, useSnackbar } from '@/components/ui';
 import type { Post, PostCategory, PostStatus, ApiError } from '@/types';
 
 interface PostEditorProps {
@@ -13,6 +13,7 @@ interface PostEditorProps {
 
 export default function PostEditor({ postId, onSave }: PostEditorProps) {
   const isEditMode = !!postId;
+  const snackbar = useSnackbar();
 
   // Form state
   const [formData, setFormData] = useState<PostFormData>({
@@ -197,9 +198,11 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
       if (isEditMode) {
         // Update existing post
         savedPost = await postsApi.update(postId!, postData);
+        snackbar.success('Bài viết đã được cập nhật thành công!');
       } else {
         // Create new post
         savedPost = await postsApi.create(postData);
+        snackbar.success('Bài viết mới đã được tạo thành công!');
       }
 
       // Show success message
@@ -233,8 +236,11 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
           fieldErrors[err.field] = err.message;
         });
         setErrors(fieldErrors);
+        snackbar.error('Vui lòng kiểm tra lại thông tin!');
       } else {
-        setApiError(error.message || 'Failed to save post');
+        const errorMsg = error.message || 'Không thể lưu bài viết';
+        setApiError(errorMsg);
+        snackbar.error(errorMsg);
       }
     } finally {
       setSaving(false);

@@ -35,7 +35,8 @@ export default function NewProductPage() {
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data);
+      // Handle both array and paginated response
+      setCategories(response.data.categories || response.data);
     } catch (err) {
       console.error('Error fetching categories:', err);
     }
@@ -46,7 +47,16 @@ export default function NewProductPage() {
     try {
       setLoading(true);
       setError(null);
-      await api.post('/products', formData);
+      
+      // Add default values for backend required fields
+      const submitData = {
+        ...formData,
+        price: 0,
+        unit: 'cái',
+        stock: 0,
+      };
+      
+      await api.post('/products', submitData);
       snackbar.success('Sản phẩm mới đã được tạo thành công!');
       setTimeout(() => router.push('/admin/products'), 1000);
     } catch (err: any) {

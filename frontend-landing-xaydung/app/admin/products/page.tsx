@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Package } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button, useSnackbar } from '@/components/ui';
 
 interface Product {
@@ -36,16 +37,19 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Debounce search term
+  const debouncedSearch = useDebounce(search, 500);
+
   useEffect(() => {
     fetchProducts();
-  }, [page, search]);
+  }, [page, debouncedSearch]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await api.get('/products', {
-        params: { page, limit: 20, search: search || undefined },
+        params: { page, limit: 20, search: debouncedSearch || undefined },
       });
       setProducts(response.data.products);
       setTotalPages(response.data.totalPages);
@@ -79,43 +83,6 @@ export default function ProductsPage() {
       currency: 'VND',
     }).format(price);
   };
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex-1">
-              <div className="h-9 bg-gray-200 rounded-lg w-64 mb-2 animate-pulse"></div>
-              <div className="h-5 bg-gray-200 rounded-lg w-96 animate-pulse"></div>
-            </div>
-            <div className="h-12 bg-gray-200 rounded-xl w-48 animate-pulse"></div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-              <div className="h-56 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 animate-pulse rounded-xl mb-4"></div>
-              <div className="px-2">
-                <div className="h-6 bg-gray-200 rounded-full w-24 mb-3 animate-pulse"></div>
-                <div className="space-y-2 mb-3">
-                  <div className="h-6 bg-gray-200 rounded-lg w-full animate-pulse"></div>
-                  <div className="h-6 bg-gray-200 rounded-lg w-3/4 animate-pulse"></div>
-                </div>
-                <div className="h-4 bg-gray-200 rounded-lg w-32 mb-5 animate-pulse"></div>
-                <div className="flex items-center gap-2 pt-5 border-t border-gray-100">
-                  <div className="flex-1 h-11 bg-gray-200 rounded-xl animate-pulse"></div>
-                  <div className="h-11 w-11 bg-gray-200 rounded-xl animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
@@ -165,7 +132,11 @@ export default function ProductsPage() {
       )}
 
       {/* Products Grid */}
-      {products.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        </div>
+      ) : products.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="text-center py-16">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">

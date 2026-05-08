@@ -89,7 +89,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ) : (
           <>
             {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
-            <span>{children}</span>
+            <span className="whitespace-nowrap">{children}</span>
             {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
           </>
         )}

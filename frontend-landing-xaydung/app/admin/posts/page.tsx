@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { postsApi } from '@/lib/api';
-import { Card, Badge, Button } from '@/components/ui';
+import { Card, Badge, Button, useSnackbar } from '@/components/ui';
 import type { Post, ApiError } from '@/types';
 
 export default function PostsPage() {
   const router = useRouter();
+  const snackbar = useSnackbar();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,13 +40,16 @@ export default function PostsPage() {
       setDeletingId(postId);
       setError(null);
       await postsApi.delete(postId);
+      snackbar.success('Bài viết đã được xóa thành công!');
       
       // Refresh posts list after successful deletion
       await fetchPosts();
       setDeleteConfirmId(null);
     } catch (err) {
       const apiError = err as ApiError;
-      setError(apiError.message || 'Failed to delete post');
+      const errorMsg = apiError.message || 'Không thể xóa bài viết';
+      setError(errorMsg);
+      snackbar.error(errorMsg);
     } finally {
       setDeletingId(null);
     }

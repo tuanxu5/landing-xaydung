@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Users as UsersIcon, X } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Button, Input } from '@/components/ui';
+import { useDebounce } from '@/hooks/useDebounce';
+import { Button, Input, useSnackbar } from '@/components/ui';
 
 interface User {
   _id: string;
@@ -24,6 +25,7 @@ interface FormData {
 }
 
 export default function UsersPage() {
+  const snackbar = useSnackbar();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,16 +47,19 @@ export default function UsersPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Debounce search term
+  const debouncedSearch = useDebounce(search, 500);
+
   useEffect(() => {
     fetchUsers();
-  }, [page, search]);
+  }, [page, debouncedSearch]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await api.get('/users', {
-        params: { page, limit: 10, search: search || undefined },
+        params: { page, limit: 10, search: debouncedSearch || undefined },
       });
       setUsers(response.data.users);
       setTotalPages(response.data.totalPages);
@@ -107,6 +112,7 @@ export default function UsersPage() {
 
       if (modalMode === 'create') {
         await api.post('/users', formData);
+        snackbar.success('Tài khoản mới đã được tạo thành công!');
       } else if (modalMode === 'edit' && selectedUser) {
         const updateData: any = {
           username: formData.username,
@@ -115,14 +121,18 @@ export default function UsersPage() {
           phone: formData.phone,
         };
         await api.patch(`/users/${selectedUser._id}`, updateData);
+        snackbar.success('Tài khoản đã được cập nhật thành công!');
       } else if (modalMode === 'password' && selectedUser) {
         await api.patch(`/users/${selectedUser._id}`, { password: formData.password });
+        snackbar.success('Mật khẩu đã được thay đổi thành công!');
       }
 
       await fetchUsers();
       closeModal();
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Có lỗi xảy ra');
+      const errorMsg = err.response?.data?.message || err.message || 'Có lỗi xảy ra';
+      setError(errorMsg);
+      snackbar.error(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -135,9 +145,12 @@ export default function UsersPage() {
       setDeletingId(id);
       setError(null);
       await api.delete(`/users/${id}`);
+      snackbar.success('Tài khoản đã được xóa thành công!');
       await fetchUsers();
     } catch (err: any) {
-      setError(err.message || 'Không thể xóa tài khoản');
+      const errorMsg = err.message || 'Không thể xóa tài khoản';
+      setError(errorMsg);
+      snackbar.error(errorMsg);
     } finally {
       setDeletingId(null);
     }

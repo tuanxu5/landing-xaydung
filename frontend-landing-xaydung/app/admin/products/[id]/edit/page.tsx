@@ -38,7 +38,8 @@ export default function EditProductPage() {
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data);
+      // Handle both array and paginated response
+      setCategories(response.data.categories || response.data);
     } catch (err) {
       console.error('Error fetching categories:', err);
     }
@@ -74,7 +75,16 @@ export default function EditProductPage() {
     try {
       setLoading(true);
       setError(null);
-      await api.patch(`/products/${params.id}`, formData);
+      
+      // Add default values for backend required fields
+      const submitData = {
+        ...formData,
+        price: 0,
+        unit: 'cái',
+        stock: 0,
+      };
+      
+      await api.patch(`/products/${params.id}`, submitData);
       snackbar.success('Sản phẩm đã được cập nhật thành công!');
       setTimeout(() => router.push('/admin/products'), 1000);
     } catch (err: any) {
