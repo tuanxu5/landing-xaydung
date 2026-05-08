@@ -152,7 +152,9 @@ export class SiteInfoService {
       return info.save();
     }
     const updated = await this.contactInfoModel.findByIdAndUpdate(info._id, dto, { new: true }).exec();
-    if (!updated) throw new NotFoundException('Contact info not found');
+    if (!updated) {
+      throw new NotFoundException('Contact info not found');
+    }
     return updated;
   }
 }

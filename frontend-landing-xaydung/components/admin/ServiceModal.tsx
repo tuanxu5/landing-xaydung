@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { postsApi } from '@/lib/api';
 import type { Post } from '@/types';
 import { Input } from '@/components/ui';
+import { generateSlug } from '@/lib/utils';
 
 interface ServiceModalProps {
   isOpen: boolean;
@@ -93,6 +94,7 @@ export default function ServiceModal({ isOpen, onClose, onSuccess, service }: Se
 
       const postData = {
         title: formData.title,
+        slug: generateSlug(formData.title),
         content: formData.content,
         featuredImage: imageUrl,
         category: 'service',

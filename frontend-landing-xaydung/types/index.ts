@@ -40,9 +40,12 @@ export type PostStatus = 'draft' | 'published';
 export interface Post {
   _id: string;
   title: string;
+  slug: string;
+  excerpt?: string;
   content: string;
   featuredImage?: string;
   category: PostCategory;
+  tags?: string[];
   status: PostStatus;
   publishedAt?: string;
   createdAt: string;
@@ -51,9 +54,12 @@ export interface Post {
 
 export interface CreatePostDto {
   title: string;
+  slug: string;
+  excerpt?: string;
   content: string;
   featuredImage?: string;
   category: PostCategory;
+  tags?: string[];
   status: PostStatus;
   publishedAt?: string;
 }

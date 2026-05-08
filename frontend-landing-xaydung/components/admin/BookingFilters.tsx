@@ -97,17 +97,16 @@ export default function BookingFilters({ onFilterChange }: BookingFiltersProps) 
             Trạng thái
           </label>
           <Select
+            id="status"
             value={status}
-            onChange={(value) => setStatus(value as BookingStatus | '')}
-            options={[
-              { value: '', label: 'Tất cả trạng thái' },
-              { value: 'pending', label: 'Chờ xác nhận' },
-              { value: 'confirmed', label: 'Đã xác nhận' },
-              { value: 'completed', label: 'Hoàn thành' },
-              { value: 'cancelled', label: 'Đã hủy' },
-            ]}
-            placeholder="Chọn trạng thái"
-          />
+            onChange={(e) => setStatus(e.target.value as BookingStatus | '')}
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="pending">Chờ xác nhận</option>
+            <option value="confirmed">Đã xác nhận</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="cancelled">Đã hủy</option>
+          </Select>
         </div>
 
         {/* Start date filter */}
@@ -142,15 +141,18 @@ export default function BookingFilters({ onFilterChange }: BookingFiltersProps) 
             Dịch vụ
           </label>
           <Select
+            id="service"
             value={service}
-            onChange={(value) => setService(value)}
-            options={[
-              { value: '', label: 'Tất cả dịch vụ' },
-              ...services.map((s) => ({ value: s.title, label: s.title })),
-            ]}
-            placeholder="Chọn dịch vụ"
+            onChange={(e) => setService(e.target.value)}
             disabled={loadingServices}
-          />
+          >
+            <option value="">Tất cả dịch vụ</option>
+            {services.map((s) => (
+              <option key={s._id} value={s.title}>
+                {s.title}
+              </option>
+            ))}
+          </Select>
         </div>
       </div>
 

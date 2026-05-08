@@ -7,6 +7,7 @@ export { default as Textarea } from './Textarea';
 export { default as Checkbox } from './Checkbox';
 export { default as TagInput } from './TagInput';
 export { default as RichTextEditor } from './RichTextEditor';
+export { default as Pagination } from './Pagination';
 export { default as SnackbarProvider, useSnackbar } from './Snackbar';
 
 export type { InputProps } from './Input';

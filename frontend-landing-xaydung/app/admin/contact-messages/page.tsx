@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { Button, Input, Textarea, useSnackbar } from '@/components/ui';
+import { Button, Input, Textarea, useSnackbar, Pagination } from '@/components/ui';
 import { Mail, Search, Eye, Trash2, X, Clock, CheckCircle, MessageSquare, Archive } from 'lucide-react';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 
@@ -298,26 +298,14 @@ export default function ContactMessagesPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                  <p className="text-sm text-gray-600">
-                    Hiển thị {(page - 1) * limit + 1} - {Math.min(page * limit, total)} trong tổng số {total}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                    >
-                      Trước
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === totalPages}
-                    >
-                      Sau
-                    </Button>
-                  </div>
+                <div className="px-6 py-4 border-t border-gray-200">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    totalItems={total}
+                    itemsPerPage={limit}
+                    onPageChange={setPage}
+                  />
                 </div>
               )}
             </>
