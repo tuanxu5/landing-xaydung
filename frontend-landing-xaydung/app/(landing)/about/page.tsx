@@ -5,7 +5,7 @@ export default function AboutPage() {
     <div>
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-20">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Về chúng tôi</h1>
             <p className="text-xl text-primary-100">
@@ -17,7 +17,7 @@ export default function AboutPage() {
 
       {/* Story Section */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Câu chuyện của chúng tôi</h2>
@@ -51,7 +51,7 @@ export default function AboutPage() {
 
       {/* Stats Section */}
       <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { icon: Users, number: '5000+', label: 'Khách hàng' },
@@ -73,7 +73,7 @@ export default function AboutPage() {
 
       {/* Values Section */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Giá trị cốt lõi</h2>
             <p className="text-lg text-gray-600">Những giá trị chúng tôi luôn hướng tới</p>
@@ -108,7 +108,7 @@ export default function AboutPage() {
 
       {/* Team Section */}
       <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Đội ngũ của chúng tôi</h2>
             <p className="text-lg text-gray-600">Những con người tạo nên sự khác biệt</p>

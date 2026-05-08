@@ -44,7 +44,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-        <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 py-20 md:py-32 relative z-10">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
               Vật Liệu Xây Dựng <br />
@@ -75,7 +75,7 @@ export default function HomePage() {
 
       {/* Features Section */}
       <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { icon: CheckCircle, title: 'Chất lượng đảm bảo', desc: 'Sản phẩm chính hãng 100%' },
@@ -97,7 +97,7 @@ export default function HomePage() {
 
       {/* Featured Products Section */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Sản phẩm nổi bật</h2>
             <p className="text-lg text-gray-600">Những sản phẩm được khách hàng tin dùng nhất</p>
@@ -124,7 +124,7 @@ export default function HomePage() {
                   )}
                 </div>
                 <div className="p-6">
-                  <div className="text-xs font-semibold text-primary-600 mb-2">{product.category.name}</div>
+                  <div className="text-xs font-semibold text-primary-600 mb-2">{product.category?.name || 'Chưa phân loại'}</div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
                     {product.name}
                   </h3>
@@ -152,7 +152,7 @@ export default function HomePage() {
       {/* Latest News Section */}
       {latestNews.length > 0 && (
         <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
+          <div className="max-w-7xl mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Tin tức mới nhất</h2>
               <p className="text-lg text-gray-600">Cập nhật thông tin và xu hướng xây dựng</p>
@@ -210,7 +210,7 @@ export default function HomePage() {
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-primary-600 to-primary-800 text-white">
-        <div className="container mx-auto px-4 text-center">
+        <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">Bạn cần tư vấn về vật liệu xây dựng?</h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
             Đội ngũ chuyên gia của chúng tôi sẵn sàng hỗ trợ bạn 24/7

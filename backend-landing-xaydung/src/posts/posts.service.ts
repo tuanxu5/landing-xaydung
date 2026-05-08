@@ -81,6 +81,24 @@ export class PostsService {
   }
 
   /**
+   * Find a single post by slug
+   * For public requests, only returns published posts
+   */
+  async findBySlug(
+    slug: string,
+    isPublicRequest: boolean = true,
+  ): Promise<Post | null> {
+    const query: any = { slug };
+
+    // For public requests, only return published posts
+    if (isPublicRequest) {
+      query.status = PostStatus.PUBLISHED;
+    }
+
+    return this.postModel.findOne(query).exec();
+  }
+
+  /**
    * Update an existing post
    * Validates post data and updates it in the database
    */

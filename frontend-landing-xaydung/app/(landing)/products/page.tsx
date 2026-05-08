@@ -11,7 +11,7 @@ interface Product {
   name: string;
   slug: string;
   thumbnail?: string;
-  category: { _id: string; name: string };
+  category: { _id: string; name: string } | null;
   shortDescription?: string;
 }
 
@@ -63,7 +63,7 @@ export default function ProductsPage() {
     <div>
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-16">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Sản phẩm</h1>
           <p className="text-xl text-primary-100">
             Khám phá bộ sưu tập vật liệu xây dựng chất lượng cao
@@ -73,7 +73,7 @@ export default function ProductsPage() {
 
       {/* Filters Section */}
       <section className="py-8 bg-gray-50 border-b border-gray-200">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
@@ -112,7 +112,7 @@ export default function ProductsPage() {
 
       {/* Products Grid */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -147,7 +147,7 @@ export default function ProductsPage() {
                     </div>
                     <div className="p-4">
                       <div className="text-xs font-semibold text-primary-600 mb-2">
-                        {product.category.name}
+                        {product.category?.name || 'Chưa phân loại'}
                       </div>
                       <h3 className="text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
                         {product.name}

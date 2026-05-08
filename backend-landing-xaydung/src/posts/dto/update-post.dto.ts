@@ -17,6 +17,18 @@ export class UpdatePostDto {
 
   @IsOptional()
   @IsString()
+  slug?: string;
+
+  @IsOptional()
+  @IsString()
+  excerpt?: string;
+
+  @IsOptional()
+  @IsString({ each: true })
+  tags?: string[];
+
+  @IsOptional()
+  @IsString()
   content?: string;
 
   @IsOptional()

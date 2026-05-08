@@ -1,14 +1,35 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Phone, Mail } from 'lucide-react';
+import { Menu, X, Phone, Mail, ChevronDown } from 'lucide-react';
+import { api } from '@/lib/api';
+
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  parent?: string;
+  children?: Category[];
+}
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [submenuPosition, setSubmenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const menuLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,12 +39,87 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    api.get('/categories/tree')
+      .then(res => setCategories(res.data || []))
+      .catch(err => console.error('Failed to fetch categories:', err));
+  }, []);
+
+  const handleItemHover = (categoryId: string, event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+      leaveTimeoutRef.current = null;
+    }
+    if (menuLeaveTimeoutRef.current) {
+      clearTimeout(menuLeaveTimeoutRef.current);
+      menuLeaveTimeoutRef.current = null;
+    }
+    
+    setHoveredItem(categoryId);
+    const rect = event.currentTarget.getBoundingClientRect();
+    setSubmenuPosition({
+      top: rect.top,
+      left: rect.right + 4,
+    });
+  };
+
+  const handleItemLeave = () => {
+    leaveTimeoutRef.current = setTimeout(() => {
+      setHoveredItem(null);
+      setSubmenuPosition(null);
+    }, 200);
+  };
+
+  const handleSubmenuEnter = (categoryId: string) => {
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+      leaveTimeoutRef.current = null;
+    }
+    if (menuLeaveTimeoutRef.current) {
+      clearTimeout(menuLeaveTimeoutRef.current);
+      menuLeaveTimeoutRef.current = null;
+    }
+    setHoveredItem(categoryId);
+    setIsProductsOpen(true);
+  };
+
+  const handleMenuLeave = () => {
+    menuLeaveTimeoutRef.current = setTimeout(() => {
+      setIsProductsOpen(false);
+      setHoveredItem(null);
+      setSubmenuPosition(null);
+    }, 200);
+  };
+
+  const renderCategoryMobile = (category: Category, level: number = 0) => {
+    return (
+      <div key={category._id}>
+        <Link
+          href={`/products?category=${category._id}`}
+          onClick={() => setIsMenuOpen(false)}
+          className={`block px-4 py-2 text-sm hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors uppercase ${
+            level === 0 ? 'font-semibold text-gray-900' : 'text-gray-600'
+          }`}
+          style={{ paddingLeft: `${16 + level * 20}px` }}
+        >
+          {level > 0 && '• '}
+          {category.name}
+        </Link>
+        {category.children && category.children.length > 0 && (
+          <>
+            {category.children.map(child => renderCategoryMobile(child, level + 1))}
+          </>
+        )}
+      </div>
+    );
+  };
+
   const navigation = [
-    { name: 'Trang chủ', href: '/' },
-    { name: 'Giới thiệu', href: '/about' },
-    { name: 'Sản phẩm', href: '/products' },
-    { name: 'Tin tức', href: '/news' },
-    { name: 'Liên hệ', href: '/contact' },
+    { name: 'TRANG CHỦ', href: '/' },
+    { name: 'GIỚI THIỆU', href: '/about' },
+    { name: 'SẢN PHẨM', href: '/products', hasDropdown: true },
+    { name: 'TIN TỨC', href: '/news' },
+    { name: 'LIÊN HỆ', href: '/contact' },
   ];
 
   const isActive = (href: string) => {
@@ -32,14 +128,9 @@ export default function Header() {
   };
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white shadow-lg' : 'bg-white/95 backdrop-blur-sm'
-      }`}
-    >
-      {/* Top bar */}
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-lg' : 'bg-white/95 backdrop-blur-sm'}`}>
       <div className="bg-primary-600 text-white py-2">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-4">
               <a href="tel:0912345678" className="flex items-center gap-2 hover:text-primary-100 transition-colors">
@@ -67,10 +158,8 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Main navigation */}
-      <div className="container mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,67 +172,131 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
             {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                  isActive(item.href)
-                    ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                }`}
-              >
-                {item.name}
-              </Link>
+              item.hasDropdown ? (
+                <div 
+                  key={item.href} 
+                  className="dropdown-menu" 
+                  onMouseEnter={() => {
+                    if (menuLeaveTimeoutRef.current) {
+                      clearTimeout(menuLeaveTimeoutRef.current);
+                      menuLeaveTimeoutRef.current = null;
+                    }
+                    setIsProductsOpen(true);
+                  }} 
+                  onMouseLeave={handleMenuLeave}
+                >
+                  <Link href={item.href} className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isActive(item.href) ? 'text-primary-600 bg-primary-50' : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'}`}>
+                    {item.name}
+                    <ChevronDown className={`w-4 h-4 transition-transform ${isProductsOpen ? 'rotate-180' : ''}`} />
+                  </Link>
+
+                  {isProductsOpen && categories.length > 0 && (
+                    <div className="dropdown-content">
+                      {categories.map((category) => (
+                        <div key={category._id} className="dropdown-item">
+                          <Link 
+                            href={`/products?category=${category._id}`} 
+                            className="dropdown-link"
+                            onMouseEnter={(e) => category.children && category.children.length > 0 && handleItemHover(category._id, e)}
+                            onMouseLeave={handleItemLeave}
+                          >
+                            <span className="uppercase font-semibold">{category.name}</span>
+                            {category.children && category.children.length > 0 && <ChevronDown className="w-4 h-4 -rotate-90" />}
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link key={item.href} href={item.href} className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isActive(item.href) ? 'text-primary-600 bg-primary-50' : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'}`}>
+                  {item.name}
+                </Link>
+              )
             ))}
           </nav>
 
-          {/* CTA Button */}
           <div className="hidden lg:block">
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/30 hover:shadow-xl"
-            >
+            <Link href="/contact" className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/30 hover:shadow-xl uppercase text-sm">
               <Phone className="w-4 h-4" />
               <span>Liên hệ ngay</span>
             </Link>
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-          >
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="lg:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="lg:hidden border-t border-gray-200 bg-white">
-          <nav className="container mx-auto px-4 py-4 space-y-1">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setIsMenuOpen(false)}
-                className={`block px-4 py-3 rounded-lg text-sm font-semibold transition-colors ${
-                  isActive(item.href)
-                    ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                }`}
+      {/* Submenu cấp 2 */}
+      {mounted && hoveredItem && submenuPosition && (() => {
+        const category = categories.find(c => c._id === hoveredItem);
+        
+        return createPortal(
+          <div 
+            style={{
+              position: 'fixed',
+              top: `${submenuPosition.top}px`,
+              left: `${submenuPosition.left}px`,
+              minWidth: '16rem',
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+              border: '1px solid #e5e7eb',
+              padding: '8px 0',
+              zIndex: 9999,
+            }}
+            onMouseEnter={() => handleSubmenuEnter(hoveredItem)}
+            onMouseLeave={handleMenuLeave}
+          >
+            {category?.children?.map((child) => (
+              <Link 
+                key={child._id} 
+                href={`/products?category=${child._id}`}
+                style={{
+                  display: 'block',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  color: '#374151',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f0f7f3';
+                  e.currentTarget.style.color = '#2a6941';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#374151';
+                }}
               >
-                {item.name}
+                • {child.name}
               </Link>
             ))}
-            <Link
-              href="/contact"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all mt-4"
-            >
+          </div>,
+          document.body
+        );
+      })()}
+
+      {isMenuOpen && (
+        <div className="lg:hidden border-t border-gray-200 bg-white">
+          <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
+            {navigation.map((item) => (
+              <div key={item.href}>
+                <Link href={item.href} onClick={() => !item.hasDropdown && setIsMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-bold transition-colors ${isActive(item.href) ? 'text-primary-600 bg-primary-50' : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'}`}>
+                  {item.name}
+                </Link>
+                {item.hasDropdown && categories.length > 0 && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    {categories.map((category) => renderCategoryMobile(category))}
+                  </div>
+                )}
+              </div>
+            ))}
+            <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all mt-4 uppercase text-sm">
               <Phone className="w-4 h-4" />
               <span>Liên hệ ngay</span>
             </Link>

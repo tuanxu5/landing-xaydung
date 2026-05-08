@@ -30,7 +30,7 @@ export default function NewsPage() {
       if (search) params.search = search;
 
       const response = await api.get('/api/posts', { params });
-      setPosts(response.data || []);
+      setPosts(response.data.posts || response.data || []);
     } catch (err) {
       console.error('Failed to fetch posts:', err);
     } finally {
@@ -42,7 +42,7 @@ export default function NewsPage() {
     <div>
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-16">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Tin tức</h1>
           <p className="text-xl text-primary-100">
             Cập nhật thông tin và xu hướng xây dựng mới nhất
@@ -52,7 +52,7 @@ export default function NewsPage() {
 
       {/* Search Section */}
       <section className="py-8 bg-gray-50 border-b border-gray-200">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-2xl mx-auto relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -68,7 +68,7 @@ export default function NewsPage() {
 
       {/* Posts Grid */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { postsApi, uploadApi } from '@/lib/api';
 import { postFormSchema, formatZodErrors, type PostFormData } from '@/lib/validation';
-import { Card, Input, Button, useSnackbar } from '@/components/ui';
+import { generateSlug } from '@/lib/utils';
+import { Card, Input, Button, TagInput, RichTextEditor, useSnackbar } from '@/components/ui';
 import type { Post, PostCategory, PostStatus, ApiError } from '@/types';
 
 interface PostEditorProps {
@@ -18,6 +19,9 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
   // Form state
   const [formData, setFormData] = useState<PostFormData>({
     title: '',
+    slug: '',
+    excerpt: '',
+    tags: [],
     content: '',
     featuredImage: '',
     category: '',
@@ -53,6 +57,9 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
       // Populate form with existing post data
       setFormData({
         title: post.title,
+        slug: post.slug || '',
+        excerpt: post.excerpt || '',
+        tags: post.tags || [],
         content: post.content,
         featuredImage: post.featuredImage || '',
         category: post.category,
@@ -80,6 +87,14 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
       ...prev,
       [name]: value,
     }));
+
+    // Auto-generate slug from title
+    if (name === 'title' && !isEditMode) {
+      setFormData((prev) => ({
+        ...prev,
+        slug: generateSlug(value),
+      }));
+    }
 
     // Clear field error when user starts typing
     if (errors[name]) {
@@ -186,6 +201,9 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
       // Prepare data for API
       const postData = {
         title: formData.title,
+        slug: formData.slug,
+        excerpt: formData.excerpt || undefined,
+        tags: formData.tags || [],
         content: formData.content,
         featuredImage: imageUrl || undefined,
         category: formData.category,
@@ -212,6 +230,9 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
       if (!isEditMode) {
         setFormData({
           title: '',
+          slug: '',
+          excerpt: '',
+          tags: [],
           content: '',
           featuredImage: '',
           category: '',
@@ -354,6 +375,60 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
               />
             </div>
 
+            {/* Slug field */}
+            <div>
+              <label htmlFor="slug" className="flex items-center text-sm font-semibold text-gray-900 mb-2">
+                <svg className="w-4 h-4 mr-2 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                Slug <span className="text-red-500 ml-1">*</span>
+              </label>
+              <Input
+                type="text"
+                id="slug"
+                name="slug"
+                value={formData.slug}
+                onChange={handleInputChange}
+                error={errors.slug}
+                placeholder="duong-dan-url-thong-minh"
+                disabled={isEditMode}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                {isEditMode ? 'Slug không thể thay đổi sau khi tạo' : 'Tự động tạo từ tiêu đề'}
+              </p>
+            </div>
+
+            {/* Excerpt field */}
+            <div>
+              <label htmlFor="excerpt" className="flex items-center text-sm font-semibold text-gray-900 mb-2">
+                <svg className="w-4 h-4 mr-2 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                Mô tả ngắn
+              </label>
+              <textarea
+                id="excerpt"
+                name="excerpt"
+                value={formData.excerpt}
+                onChange={handleInputChange}
+                rows={3}
+                className={`block w-full rounded-lg border shadow-sm text-sm transition-colors resize-none p-3 ${
+                  errors.excerpt
+                    ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                    : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'
+                }`}
+                placeholder="Mô tả ngắn gọn về bài viết (hiển thị trong danh sách)..."
+              />
+              {errors.excerpt && (
+                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.excerpt}
+                </p>
+              )}
+            </div>
+
             {/* Content field */}
             <div>
               <label htmlFor="content" className="flex items-center text-sm font-semibold text-gray-900 mb-2">
@@ -362,27 +437,21 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
                 </svg>
                 Nội dung <span className="text-red-500 ml-1">*</span>
               </label>
-              <textarea
-                id="content"
-                name="content"
+              <RichTextEditor
                 value={formData.content}
-                onChange={handleInputChange}
-                rows={12}
-                className={`block w-full rounded-lg border shadow-sm text-sm transition-colors resize-none p-3 ${
-                  errors.content
-                    ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                    : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'
-                }`}
+                onChange={(content) => {
+                  setFormData((prev) => ({ ...prev, content }));
+                  if (errors.content) {
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.content;
+                      return newErrors;
+                    });
+                  }
+                }}
+                error={errors.content}
                 placeholder="Viết nội dung bài viết của bạn tại đây..."
               />
-              {errors.content && (
-                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {errors.content}
-                </p>
-              )}
             </div>
 
             {/* Submit button */}
@@ -437,6 +506,29 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
                 onChange={handleInputChange}
                 error={errors.category}
                 placeholder="Nhập danh mục..."
+              />
+            </div>
+
+            {/* Tags field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tags
+              </label>
+              <TagInput
+                value={formData.tags || []}
+                onChange={(tags) => {
+                  setFormData((prev) => ({ ...prev, tags }));
+                  if (errors.tags) {
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.tags;
+                      return newErrors;
+                    });
+                  }
+                }}
+                error={errors.tags}
+                placeholder="Nhập tag và nhấn Enter..."
+                maxTags={10}
               />
             </div>
           </div>

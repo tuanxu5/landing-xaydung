@@ -16,6 +16,15 @@ export class Post {
   @Prop({ required: true, minlength: 1, maxlength: 200 })
   title: string;
 
+  @Prop({ required: true, unique: true })
+  slug: string;
+
+  @Prop()
+  excerpt?: string;
+
+  @Prop({ type: [String], default: [] })
+  tags: string[];
+
   @Prop({ required: true })
   content: string;
 
@@ -51,3 +60,4 @@ export const PostSchema = SchemaFactory.createForClass(Post);
 // Add indexes for efficient querying
 PostSchema.index({ publishedAt: -1 });
 PostSchema.index({ category: 1, status: 1 });
+PostSchema.index({ slug: 1 });

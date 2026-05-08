@@ -99,6 +99,20 @@ export const postFormSchema = z.object({
     .min(1, 'Title is required')
     .max(200, 'Title must be less than 200 characters'),
   
+  slug: z
+    .string()
+    .min(1, 'Slug is required'),
+  
+  excerpt: z
+    .string()
+    .optional()
+    .or(z.literal('')),
+  
+  tags: z
+    .array(z.string())
+    .optional()
+    .default([]),
+  
   content: z
     .string()
     .min(1, 'Content is required'),

@@ -111,6 +111,24 @@ export class PostsController {
   }
 
   /**
+   * GET /api/posts/slug/:slug
+   * Retrieve a specific post by slug
+   * Public endpoint - returns only published posts
+   */
+  @Get('slug/:slug')
+  async findBySlug(@Param('slug') slug: string): Promise<PostEntity> {
+    const isPublicRequest = true;
+
+    const post = await this.postsService.findBySlug(slug, isPublicRequest);
+
+    if (!post) {
+      throw new NotFoundException(`Post with slug ${slug} not found`);
+    }
+
+    return post;
+  }
+
+  /**
    * PUT /api/posts/:id
    * Update an existing post
    * Requires authentication

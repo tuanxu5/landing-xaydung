@@ -16,6 +16,18 @@ export class CreatePostDto {
   @MaxLength(200, { message: 'Title must not exceed 200 characters' })
   title: string;
 
+  @IsNotEmpty({ message: 'Slug is required' })
+  @IsString()
+  slug: string;
+
+  @IsOptional()
+  @IsString()
+  excerpt?: string;
+
+  @IsOptional()
+  @IsString({ each: true })
+  tags?: string[];
+
   @IsNotEmpty({ message: 'Content is required' })
   @IsString()
   content: string;
