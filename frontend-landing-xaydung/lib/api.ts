@@ -80,6 +80,9 @@ const createApiClient = (): AxiosInstance => {
 // Create singleton instance
 const apiClient = createApiClient();
 
+// Export the axios instance as 'api' for direct use
+export const api = apiClient;
+
 /**
  * Bookings API
  */

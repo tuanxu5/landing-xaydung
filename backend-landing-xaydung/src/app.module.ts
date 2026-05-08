@@ -6,7 +6,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
-import { BookingsModule } from './bookings/bookings.module';
+import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
+import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { UploadModule } from './upload/upload.module';
 
@@ -26,7 +28,9 @@ import { UploadModule } from './upload/upload.module';
     ]),
     DatabaseModule,
     AuthModule,
-    BookingsModule,
+    ProductsModule,
+    CategoriesModule,
+    UsersModule,
     PostsModule,
     UploadModule,
   ],

@@ -12,7 +12,14 @@ const SALT_ROUNDS = 10;
 const DEFAULT_ADMIN = {
   username: 'admin',
   password: 'Admin@123',
-  email: 'admin@spanhuy.com',
+  email: 'admin@xaydung.com',
+};
+
+// Default user account
+const DEFAULT_USER = {
+  username: 'user',
+  password: 'User@123',
+  email: 'user@xaydung.com',
 };
 
 /**
@@ -52,41 +59,67 @@ async function seedAdmin() {
     
     const administratorsCollection = db.collection<Administrator>('administrators');
 
-    // Check if admin already exists
+    // Create Admin account
     const existingAdmin = await administratorsCollection.findOne({
       username: DEFAULT_ADMIN.username,
     });
 
     if (existingAdmin) {
       console.log(`Administrator '${DEFAULT_ADMIN.username}' already exists. Skipping creation.`);
-      return;
+    } else {
+      console.log('Hashing admin password...');
+      const adminPasswordHash = await bcrypt.hash(DEFAULT_ADMIN.password, SALT_ROUNDS);
+
+      const administrator: Administrator = {
+        username: DEFAULT_ADMIN.username,
+        passwordHash: adminPasswordHash,
+        email: DEFAULT_ADMIN.email,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      console.log('Creating administrator account...');
+      await administratorsCollection.insertOne(administrator);
+      console.log('✅ Administrator account created!');
     }
 
-    // Hash the password
-    console.log('Hashing password...');
-    const passwordHash = await bcrypt.hash(DEFAULT_ADMIN.password, SALT_ROUNDS);
+    // Create User account
+    const existingUser = await administratorsCollection.findOne({
+      username: DEFAULT_USER.username,
+    });
 
-    // Create the administrator document
-    const administrator: Administrator = {
-      username: DEFAULT_ADMIN.username,
-      passwordHash,
-      email: DEFAULT_ADMIN.email,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    if (existingUser) {
+      console.log(`User '${DEFAULT_USER.username}' already exists. Skipping creation.`);
+    } else {
+      console.log('Hashing user password...');
+      const userPasswordHash = await bcrypt.hash(DEFAULT_USER.password, SALT_ROUNDS);
 
-    // Insert the administrator
-    console.log('Creating administrator account...');
-    await administratorsCollection.insertOne(administrator);
+      const user: Administrator = {
+        username: DEFAULT_USER.username,
+        passwordHash: userPasswordHash,
+        email: DEFAULT_USER.email,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    console.log('\n✅ Administrator account created successfully!');
-    console.log('\nDefault credentials:');
+      console.log('Creating user account...');
+      await administratorsCollection.insertOne(user);
+      console.log('✅ User account created!');
+    }
+
+    console.log('\n✅ All accounts created successfully!');
+    console.log('\n📋 Default credentials:');
+    console.log('\n👤 Admin Account:');
     console.log(`  Username: ${DEFAULT_ADMIN.username}`);
     console.log(`  Password: ${DEFAULT_ADMIN.password}`);
     console.log(`  Email: ${DEFAULT_ADMIN.email}`);
-    console.log('\n⚠️  IMPORTANT: Change the default password after first login!\n');
+    console.log('\n👤 User Account:');
+    console.log(`  Username: ${DEFAULT_USER.username}`);
+    console.log(`  Password: ${DEFAULT_USER.password}`);
+    console.log(`  Email: ${DEFAULT_USER.email}`);
+    console.log('\n⚠️  IMPORTANT: Change the default passwords after first login!\n');
   } catch (error) {
-    console.error('Error seeding administrator:', error);
+    console.error('Error seeding accounts:', error);
     process.exit(1);
   } finally {
     await connection.close();
