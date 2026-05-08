@@ -1,7 +1,7 @@
 import React, { forwardRef, TextareaHTMLAttributes } from 'react';
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string;
+  label?: React.ReactNode;
   error?: string;
   helperText?: string;
   icon?: React.ReactNode;

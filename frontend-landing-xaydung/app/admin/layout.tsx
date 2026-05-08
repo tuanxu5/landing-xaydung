@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { SnackbarProvider } from '@/components/ui';
 import Navigation from '@/components/admin/Navigation';
 import TopBar from '@/components/admin/TopBar';
 
@@ -50,26 +51,30 @@ export default function AdminLayout({
   if (isLoginPage) {
     return (
       <AuthProvider>
-        {children}
+        <SnackbarProvider>
+          {children}
+        </SnackbarProvider>
       </AuthProvider>
     );
   }
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-primary-50/30">
-        <Navigation isOpen={sidebarOpen} onClose={closeSidebar} />
-        <TopBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
-        
-        {/* Main content area - điều chỉnh margin dựa trên sidebar state */}
-        <main 
-          className={`pt-20 transition-all duration-300 ${
-            sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'
-          }`}
-        >
-          {children}
-        </main>
-      </div>
+      <SnackbarProvider>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-primary-50/30">
+          <Navigation isOpen={sidebarOpen} onClose={closeSidebar} />
+          <TopBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+          
+          {/* Main content area - điều chỉnh margin dựa trên sidebar state */}
+          <main 
+            className={`pt-20 transition-all duration-300 ${
+              sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'
+            }`}
+          >
+            {children}
+          </main>
+        </div>
+      </SnackbarProvider>
     </AuthProvider>
   );
 }

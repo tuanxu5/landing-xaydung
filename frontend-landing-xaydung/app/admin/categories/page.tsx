@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { FolderTree, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { generateSlug } from '@/lib/utils';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, useSnackbar } from '@/components/ui';
 
 interface Category {
   _id: string;
@@ -22,6 +22,7 @@ interface FormData {
 }
 
 export default function CategoriesPage() {
+  const snackbar = useSnackbar();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,14 +93,18 @@ export default function CategoriesPage() {
 
       if (modalMode === 'create') {
         await api.post('/categories', submitData);
+        snackbar.success('Danh mục mới đã được tạo thành công!');
       } else if (modalMode === 'edit' && selectedCategory) {
         await api.patch(`/categories/${selectedCategory._id}`, submitData);
+        snackbar.success('Danh mục đã được cập nhật thành công!');
       }
 
       await fetchCategories();
       closeModal();
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Có lỗi xảy ra');
+      const errorMsg = err.response?.data?.message || err.message || 'Có lỗi xảy ra';
+      setError(errorMsg);
+      snackbar.error(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -112,9 +117,12 @@ export default function CategoriesPage() {
       setDeletingId(id);
       setError(null);
       await api.delete(`/categories/${id}`);
+      snackbar.success('Danh mục đã được xóa thành công!');
       await fetchCategories();
     } catch (err: any) {
-      setError(err.message || 'Không thể xóa danh mục');
+      const errorMsg = err.message || 'Không thể xóa danh mục';
+      setError(errorMsg);
+      snackbar.error(errorMsg);
     } finally {
       setDeletingId(null);
     }

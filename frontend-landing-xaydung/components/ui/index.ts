@@ -5,6 +5,7 @@ export { default as Badge } from './Badge';
 export { default as Select } from './Select';
 export { default as Textarea } from './Textarea';
 export { default as Checkbox } from './Checkbox';
+export { default as SnackbarProvider, useSnackbar } from './Snackbar';
 
 export type { InputProps } from './Input';
 export type { ButtonProps } from './Button';
@@ -13,3 +14,4 @@ export type { BadgeProps } from './Badge';
 export type { SelectProps } from './Select';
 export type { TextareaProps } from './Textarea';
 export type { CheckboxProps } from './Checkbox';
+

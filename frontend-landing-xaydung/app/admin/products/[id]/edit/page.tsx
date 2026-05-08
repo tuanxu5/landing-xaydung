@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
-import { Button, Card, Input, Textarea, Select, Checkbox } from '@/components/ui';
+import { generateSlug } from '@/lib/utils';
+import { Button, Card, Input, Textarea, Select, Checkbox, useSnackbar } from '@/components/ui';
 
 interface Category {
   _id: string;
@@ -13,9 +14,9 @@ interface Category {
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
+  const snackbar = useSnackbar();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
@@ -60,22 +61,12 @@ export default function EditProductPage() {
         isFeatured: product.isFeatured,
       });
     } catch (err: any) {
-      setError(err.message || 'Không thể tải thông tin sản phẩm');
+      const errorMsg = err.message || 'Không thể tải thông tin sản phẩm';
+      setError(errorMsg);
+      snackbar.error(errorMsg);
     } finally {
       setFetching(false);
     }
-  };
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/đ/g, 'd')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,12 +74,13 @@ export default function EditProductPage() {
     try {
       setLoading(true);
       setError(null);
-      setSuccess(false);
       await api.patch(`/products/${params.id}`, formData);
-      setSuccess(true);
-      setTimeout(() => router.push('/admin/products'), 1500);
+      snackbar.success('Sản phẩm đã được cập nhật thành công!');
+      setTimeout(() => router.push('/admin/products'), 1000);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Không thể cập nhật sản phẩm');
+      const errorMsg = err.response?.data?.message || err.message || 'Không thể cập nhật sản phẩm';
+      setError(errorMsg);
+      snackbar.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -118,41 +110,10 @@ export default function EditProductPage() {
         <div className="lg:col-span-2">
           <Card>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Success message */}
-              {success && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <svg className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-green-800 mb-1">Thành công!</h3>
-                      <p className="text-sm text-green-700">Sản phẩm đã được cập nhật.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Error message */}
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                        <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-red-800 mb-1">Lỗi</h3>
-                      <p className="text-sm text-red-700">{error}</p>
-                    </div>
-                  </div>
+                  <p className="text-sm text-red-700">{error}</p>
                 </div>
               )}
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Package } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Button } from '@/components/ui';
+import { Button, useSnackbar } from '@/components/ui';
 
 interface Product {
   _id: string;
@@ -26,6 +26,7 @@ interface Product {
 
 export default function ProductsPage() {
   const router = useRouter();
+  const snackbar = useSnackbar();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,10 +61,13 @@ export default function ProductsPage() {
       setDeletingId(id);
       setError(null);
       await api.delete(`/products/${id}`);
+      snackbar.success('Sản phẩm đã được xóa thành công!');
       await fetchProducts();
       setDeleteConfirmId(null);
     } catch (err: any) {
-      setError(err.message || 'Không thể xóa sản phẩm');
+      const errorMsg = err.message || 'Không thể xóa sản phẩm';
+      setError(errorMsg);
+      snackbar.error(errorMsg);
     } finally {
       setDeletingId(null);
     }

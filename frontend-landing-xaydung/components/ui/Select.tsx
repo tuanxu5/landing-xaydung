@@ -1,7 +1,7 @@
 import React, { forwardRef, SelectHTMLAttributes } from 'react';
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string;
+  label?: React.ReactNode;
   error?: string;
   helperText?: string;
   icon?: React.ReactNode;
