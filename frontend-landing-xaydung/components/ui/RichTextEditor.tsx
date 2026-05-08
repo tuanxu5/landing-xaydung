@@ -1,6 +1,6 @@
 'use client';
 
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react';
 import { useState, useRef, useEffect } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -8,6 +8,7 @@ import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import { uploadApi } from '@/lib/api';
+import ResizableImageNode from './ResizableImageNode';
 import {
   Bold,
   Italic,
@@ -88,10 +89,10 @@ export default function RichTextEditor({
             },
           };
         },
-      }).configure({
-        HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto cursor-pointer',
+        addNodeView() {
+          return ReactNodeViewRenderer(ResizableImageNode);
         },
+      }).configure({
         inline: false,
         allowBase64: true,
       }),
@@ -363,28 +364,46 @@ export default function RichTextEditor({
         </div>
 
         {/* Editor Content */}
-        <div 
-          ref={editorRef}
-          onDoubleClick={(e) => {
-            const target = e.target as HTMLElement;
-            if (target.tagName === 'IMG') {
-              const currentWidth = target.style.width || target.offsetWidth + 'px';
-              const newWidth = window.prompt('Nhập chiều rộng ảnh (px hoặc %):', currentWidth);
-              if (newWidth) {
-                const img = target as HTMLImageElement;
-                img.style.width = newWidth.includes('%') || newWidth.includes('px') ? newWidth : newWidth + 'px';
-                img.style.height = 'auto';
-                // Update in editor
-                editor?.commands.updateAttributes('image', {
-                  width: img.style.width,
-                });
-              }
-            }
-          }}
-        >
+        <div ref={editorRef} className="editor-content-wrapper">
           <EditorContent editor={editor} />
         </div>
       </div>
+
+      {/* Custom CSS for editor */}
+      <style jsx global>{`
+        .ProseMirror {
+          outline: none;
+        }
+        
+        .ProseMirror p.is-editor-empty:first-child::before {
+          content: attr(data-placeholder);
+          float: left;
+          color: #adb5bd;
+          pointer-events: none;
+          height: 0;
+        }
+
+        /* Image node view styles */
+        .ProseMirror .resizable-image-wrapper {
+          display: inline-block;
+          max-width: 100%;
+          margin: 1rem 0;
+        }
+
+        .ProseMirror .resizable-image-wrapper img {
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .ProseMirror .resizable-image-wrapper img:hover {
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Ensure node views are selectable */
+        .ProseMirror .ProseMirror-selectednode {
+          outline: none;
+        }
+      `}</style>
 
       {/* Image Upload Modal */}
       {showImageModal && (
