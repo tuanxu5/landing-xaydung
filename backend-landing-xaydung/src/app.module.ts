@@ -14,6 +14,7 @@ import { UploadModule } from './upload/upload.module';
 import { SettingsModule } from './settings/settings.module';
 import { RecruitmentsModule } from './recruitments/recruitments.module';
 import { SiteInfoModule } from './site-info/site-info.module';
+import { ContactMessagesModule } from './contact-messages/contact-messages.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { SiteInfoModule } from './site-info/site-info.module';
     SettingsModule,
     RecruitmentsModule,
     SiteInfoModule,
+    ContactMessagesModule,
   ],
   controllers: [AppController],
   providers: [

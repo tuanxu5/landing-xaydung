@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, Send } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     email: '',
     phone: '',
     subject: '',
@@ -13,19 +14,24 @@ export default function ContactPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setError('');
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await api.post('/api/contact-messages', formData);
       setSuccess(true);
-      setSubmitting(false);
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      setFormData({ fullName: '', email: '', phone: '', subject: '', message: '' });
       
       setTimeout(() => setSuccess(false), 5000);
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -139,6 +145,12 @@ export default function ContactPage() {
                   </div>
                 )}
 
+                {error && (
+                  <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -148,8 +160,8 @@ export default function ContactPage() {
                       <input
                         type="text"
                         required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        value={formData.fullName}
+                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all"
                         placeholder="Nguyễn Văn A"
                       />

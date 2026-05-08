@@ -274,6 +274,21 @@ export const uploadApi = {
     });
     return response.data;
   },
+
+  /**
+   * Upload a certificate file (PDF or Image)
+   */
+  uploadCertificate: async (file: File): Promise<{ filename: string; path: string; size: number; mimetype: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post('/upload/certificate', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 };
 
 /**

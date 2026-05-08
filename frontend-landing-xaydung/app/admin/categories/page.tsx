@@ -14,6 +14,10 @@ interface Category {
   parent?: {
     _id: string;
     name: string;
+    parent?: {
+      _id: string;
+      name: string;
+    };
   };
   createdAt: string;
 }
@@ -155,6 +159,25 @@ export default function CategoriesPage() {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
+    });
+  };
+
+  // Helper function to get category level
+  const getCategoryLevel = (category: Category): number => {
+    if (!category.parent) return 1; // Cấp 1
+    if (!category.parent.parent) return 2; // Cấp 2
+    return 3; // Cấp 3 trở đi
+  };
+
+  // Filter categories that can be parent (only level 1 and 2)
+  const getAvailableParentCategories = () => {
+    return categories.filter(cat => {
+      // Không cho chọn chính nó
+      if (cat._id === selectedCategory?._id) return false;
+      
+      // Chỉ cho phép chọn cấp 1 và cấp 2
+      const level = getCategoryLevel(cat);
+      return level <= 2;
     });
   };
 
@@ -378,15 +401,18 @@ export default function CategoriesPage() {
                 label="Danh mục cha"
                 value={formData.parent}
                 onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
+                helperText="Chỉ có thể chọn danh mục cấp 1 hoặc cấp 2 làm danh mục cha"
               >
-                <option value="">-- Không có --</option>
-                {categories
-                  .filter(cat => cat._id !== selectedCategory?._id)
-                  .map((cat) => (
+                <option value="">-- Không có (Danh mục cấp 1) --</option>
+                {getAvailableParentCategories().map((cat) => {
+                  const level = getCategoryLevel(cat);
+                  const prefix = level === 1 ? '📁 ' : '  └─ ';
+                  return (
                     <option key={cat._id} value={cat._id}>
-                      {cat.name}
+                      {prefix}{cat.name} {level === 2 ? `(Cấp ${level})` : ''}
                     </option>
-                  ))}
+                  );
+                })}
               </Select>
 
               {/* Modal Footer */}

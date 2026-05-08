@@ -52,7 +52,12 @@ export class CategoriesService {
     const total = await this.categoryModel.countDocuments(filter);
     const categories = await this.categoryModel
       .find(filter)
-      .populate('parent')
+      .populate({
+        path: 'parent',
+        populate: {
+          path: 'parent',
+        },
+      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -69,7 +74,12 @@ export class CategoriesService {
   async findOne(id: string): Promise<Category> {
     const category = await this.categoryModel
       .findById(id)
-      .populate('parent')
+      .populate({
+        path: 'parent',
+        populate: {
+          path: 'parent',
+        },
+      })
       .exec();
     
     if (!category) {
@@ -82,7 +92,12 @@ export class CategoriesService {
   async findBySlug(slug: string): Promise<Category> {
     const category = await this.categoryModel
       .findOne({ slug })
-      .populate('parent')
+      .populate({
+        path: 'parent',
+        populate: {
+          path: 'parent',
+        },
+      })
       .exec();
     
     if (!category) {
@@ -102,7 +117,12 @@ export class CategoriesService {
     try {
       const category = await this.categoryModel
         .findByIdAndUpdate(id, updateCategoryDto, { new: true })
-        .populate('parent')
+        .populate({
+          path: 'parent',
+          populate: {
+            path: 'parent',
+          },
+        })
         .exec();
       
       if (!category) {
