@@ -18,6 +18,12 @@ import type {
   ChangePasswordDto,
   Administrator,
   ApiError,
+  Recruitment,
+  CreateRecruitmentDto,
+  UpdateRecruitmentDto,
+  Application,
+  CreateApplicationDto,
+  UpdateApplicationDto,
 } from '@/types';
 import { getSessionToken, clearSession } from './auth';
 
@@ -252,6 +258,121 @@ export const uploadApi = {
       },
     });
     return response.data;
+  },
+
+  /**
+   * Upload a CV file (PDF, DOC, DOCX)
+   */
+  uploadCV: async (file: File): Promise<{ filename: string; path: string; size: number; mimetype: string; originalName: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post('/upload/cv', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+};
+
+/**
+ * Recruitments API
+ */
+export const recruitmentsApi = {
+  /**
+   * Create a new recruitment
+   */
+  create: async (data: CreateRecruitmentDto): Promise<Recruitment> => {
+    const response = await apiClient.post<Recruitment>('/api/recruitments', data);
+    return response.data;
+  },
+
+  /**
+   * Get all recruitments with pagination and filters
+   */
+  getAll: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<{ data: Recruitment[]; total: number; page: number; limit: number }> => {
+    const response = await apiClient.get('/api/recruitments', { params });
+    return response.data;
+  },
+
+  /**
+   * Get a single recruitment by ID
+   */
+  getById: async (id: string): Promise<Recruitment> => {
+    const response = await apiClient.get<Recruitment>(`/api/recruitments/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Update an existing recruitment
+   */
+  update: async (id: string, data: UpdateRecruitmentDto): Promise<Recruitment> => {
+    const response = await apiClient.put<Recruitment>(`/api/recruitments/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete a recruitment
+   */
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/recruitments/${id}`);
+  },
+};
+
+/**
+ * Applications API
+ */
+export const applicationsApi = {
+  /**
+   * Create a new application (public endpoint)
+   */
+  create: async (data: CreateApplicationDto): Promise<Application> => {
+    const response = await apiClient.post<Application>('/api/recruitments/applications', data);
+    return response.data;
+  },
+
+  /**
+   * Get all applications for a recruitment
+   */
+  getByRecruitment: async (
+    recruitmentId: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      status?: string;
+    }
+  ): Promise<{ data: Application[]; total: number; page: number; limit: number }> => {
+    const response = await apiClient.get(`/api/recruitments/${recruitmentId}/applications`, { params });
+    return response.data;
+  },
+
+  /**
+   * Get a single application by ID
+   */
+  getById: async (id: string): Promise<Application> => {
+    const response = await apiClient.get<Application>(`/api/recruitments/applications/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Update an application (admin only)
+   */
+  update: async (id: string, data: UpdateApplicationDto): Promise<Application> => {
+    const response = await apiClient.put<Application>(`/api/recruitments/applications/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete an application
+   */
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/recruitments/applications/${id}`);
   },
 };
 

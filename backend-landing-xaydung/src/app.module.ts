@@ -12,6 +12,8 @@ import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { UploadModule } from './upload/upload.module';
 import { SettingsModule } from './settings/settings.module';
+import { RecruitmentsModule } from './recruitments/recruitments.module';
+import { SiteInfoModule } from './site-info/site-info.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { SettingsModule } from './settings/settings.module';
     PostsModule,
     UploadModule,
     SettingsModule,
+    RecruitmentsModule,
+    SiteInfoModule,
   ],
   controllers: [AppController],
   providers: [

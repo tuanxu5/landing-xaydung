@@ -125,3 +125,70 @@ export interface PostFilters {
   category?: PostCategory;
   status?: PostStatus;
 }
+
+// Recruitment types
+export interface Recruitment {
+  _id: string;
+  banner: string;
+  title: string;
+  quantity: number;
+  location: string;
+  department: string;
+  jobDescription: string;
+  candidateRequirements: string;
+  salary: string;
+  benefits: string;
+  contact: string;
+  applicationDeadline: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRecruitmentDto {
+  banner: string;
+  title: string;
+  quantity: number;
+  location: string;
+  department: string;
+  jobDescription: string;
+  candidateRequirements: string;
+  salary: string;
+  benefits: string;
+  contact: string;
+  applicationDeadline: string;
+  isActive?: boolean;
+}
+
+export interface UpdateRecruitmentDto extends Partial<CreateRecruitmentDto> {}
+
+// Application types
+export type ApplicationStatus = 'pending' | 'reviewing' | 'interviewed' | 'accepted' | 'rejected';
+
+export interface Application {
+  _id: string;
+  recruitmentId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  cvUrl: string;
+  coverLetter?: string;
+  status: ApplicationStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateApplicationDto {
+  recruitmentId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  cvUrl: string;
+  coverLetter?: string;
+}
+
+export interface UpdateApplicationDto {
+  status?: ApplicationStatus;
+  notes?: string;
+}

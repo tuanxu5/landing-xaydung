@@ -19,12 +19,14 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isNewsOpen, setIsNewsOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [submenuPosition, setSubmenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [mounted, setMounted] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const menuLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const newsLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -117,9 +119,14 @@ export default function Header() {
   const navigation = [
     { name: 'TRANG CHỦ', href: '/' },
     { name: 'GIỚI THIỆU', href: '/about' },
-    { name: 'SẢN PHẨM', href: '/products', hasDropdown: true },
-    { name: 'TIN TỨC', href: '/news' },
+    { name: 'SẢN PHẨM', href: '/products', hasDropdown: true, dropdownType: 'products' },
+    { name: 'TIN TỨC', href: '/news', hasDropdown: true, dropdownType: 'news' },
     { name: 'LIÊN HỆ', href: '/contact' },
+  ];
+
+  const newsSubmenu = [
+    { name: 'TIN TỨC NỔI BẬT', href: '/news' },
+    { name: 'TUYỂN DỤNG', href: '/recruitments' },
   ];
 
   const isActive = (href: string) => {
@@ -183,16 +190,35 @@ export default function Header() {
                       clearTimeout(menuLeaveTimeoutRef.current);
                       menuLeaveTimeoutRef.current = null;
                     }
-                    setIsProductsOpen(true);
+                    if (newsLeaveTimeoutRef.current) {
+                      clearTimeout(newsLeaveTimeoutRef.current);
+                      newsLeaveTimeoutRef.current = null;
+                    }
+                    if (item.dropdownType === 'products') {
+                      setIsProductsOpen(true);
+                      setIsNewsOpen(false);
+                    } else if (item.dropdownType === 'news') {
+                      setIsNewsOpen(true);
+                      setIsProductsOpen(false);
+                    }
                   }} 
-                  onMouseLeave={handleMenuLeave}
+                  onMouseLeave={() => {
+                    if (item.dropdownType === 'products') {
+                      handleMenuLeave();
+                    } else if (item.dropdownType === 'news') {
+                      newsLeaveTimeoutRef.current = setTimeout(() => {
+                        setIsNewsOpen(false);
+                      }, 200);
+                    }
+                  }}
                 >
                   <Link href={item.href} className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isActive(item.href) ? 'text-primary-600 bg-primary-50' : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'}`}>
                     {item.name}
-                    <ChevronDown className={`w-4 h-4 transition-transform ${isProductsOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform ${(item.dropdownType === 'products' && isProductsOpen) || (item.dropdownType === 'news' && isNewsOpen) ? 'rotate-180' : ''}`} />
                   </Link>
 
-                  {isProductsOpen && categories.length > 0 && (
+                  {/* Products Dropdown */}
+                  {item.dropdownType === 'products' && isProductsOpen && categories.length > 0 && (
                     <div className="dropdown-content">
                       {categories.map((category) => (
                         <div key={category._id} className="dropdown-item">
@@ -204,6 +230,22 @@ export default function Header() {
                           >
                             <span className="uppercase font-semibold">{category.name}</span>
                             {category.children && category.children.length > 0 && <ChevronDown className="w-4 h-4 -rotate-90" />}
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* News Dropdown */}
+                  {item.dropdownType === 'news' && isNewsOpen && (
+                    <div className="dropdown-content">
+                      {newsSubmenu.map((newsItem) => (
+                        <div key={newsItem.href} className="dropdown-item">
+                          <Link 
+                            href={newsItem.href} 
+                            className="dropdown-link"
+                          >
+                            <span className="uppercase font-semibold">{newsItem.name}</span>
                           </Link>
                         </div>
                       ))}
@@ -289,9 +331,23 @@ export default function Header() {
                 <Link href={item.href} onClick={() => !item.hasDropdown && setIsMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-bold transition-colors ${isActive(item.href) ? 'text-primary-600 bg-primary-50' : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'}`}>
                   {item.name}
                 </Link>
-                {item.hasDropdown && categories.length > 0 && (
+                {item.hasDropdown && item.dropdownType === 'products' && categories.length > 0 && (
                   <div className="ml-4 mt-1 space-y-1">
                     {categories.map((category) => renderCategoryMobile(category))}
+                  </div>
+                )}
+                {item.hasDropdown && item.dropdownType === 'news' && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    {newsSubmenu.map((newsItem) => (
+                      <Link
+                        key={newsItem.href}
+                        href={newsItem.href}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block px-4 py-2 text-sm font-semibold text-gray-900 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors uppercase"
+                      >
+                        {newsItem.name}
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>
