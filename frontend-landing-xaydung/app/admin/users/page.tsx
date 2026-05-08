@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Users as UsersIcon, X } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Button } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 
 interface User {
   _id: string;
@@ -176,7 +176,7 @@ export default function UsersPage() {
 
       {/* Search */}
       <div className="mb-6">
-        <input
+        <Input
           type="text"
           placeholder="Tìm kiếm theo tên, username, email, số điện thoại..."
           value={search}
@@ -184,7 +184,6 @@ export default function UsersPage() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
       </div>
 
@@ -357,96 +356,84 @@ export default function UsersPage() {
               )}
 
               {modalMode === 'password' ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mật khẩu mới *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Nhập mật khẩu mới"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Tối thiểu 6 ký tự</p>
-                </div>
+                <Input
+                  label={
+                    <>
+                      Mật khẩu mới <span className="text-red-500">*</span>
+                    </>
+                  }
+                  type="password"
+                  required
+                  minLength={6}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Nhập mật khẩu mới"
+                  helperText="Tối thiểu 6 ký tự"
+                />
               ) : (
                 <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Username *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      minLength={3}
-                      value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="admin hoặc user123"
-                      disabled={modalMode === 'edit'}
-                    />
-                  </div>
+                  <Input
+                    label={
+                      <>
+                        Username <span className="text-red-500">*</span>
+                      </>
+                    }
+                    required
+                    minLength={3}
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    placeholder="admin hoặc user123"
+                    disabled={modalMode === 'edit'}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Họ tên *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="Nguyễn Văn A"
-                    />
-                  </div>
+                  <Input
+                    label={
+                      <>
+                        Họ tên <span className="text-red-500">*</span>
+                      </>
+                    }
+                    required
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    placeholder="Nguyễn Văn A"
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="email@example.com"
-                    />
-                  </div>
+                  <Input
+                    label={
+                      <>
+                        Email <span className="text-red-500">*</span>
+                      </>
+                    }
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@example.com"
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Số điện thoại
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="0912345678"
-                    />
-                  </div>
+                  <Input
+                    label="Số điện thoại"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="0912345678"
+                  />
 
                   {modalMode === 'create' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Mật khẩu *
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        minLength={6}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        placeholder="••••••••"
-                      />
-                      <p className="mt-1 text-xs text-gray-500">Tối thiểu 6 ký tự</p>
-                    </div>
+                    <Input
+                      label={
+                        <>
+                          Mật khẩu <span className="text-red-500">*</span>
+                        </>
+                      }
+                      type="password"
+                      required
+                      minLength={6}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="••••••••"
+                      helperText="Tối thiểu 6 ký tự"
+                    />
                   )}
                 </>
               )}
