@@ -35,11 +35,11 @@ export class ProductsController {
   ) {
     return this.productsService.findAll({
       category,
-      isActive: isActive === 'true',
-      isFeatured: isFeatured === 'true',
+      isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      isFeatured: isFeatured === 'true' ? true : isFeatured === 'false' ? false : undefined,
       search,
-      page: page ? parseInt(page) : undefined,
-      limit: limit ? parseInt(limit) : undefined,
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
     });
   }
 

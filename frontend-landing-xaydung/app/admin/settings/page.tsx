@@ -1,207 +1,245 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { Settings as SettingsIcon } from 'lucide-react';
+import { api } from '@/lib/api';
+import { Button, Input, Textarea, useSnackbar } from '@/components/ui';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
-import PasswordChange from '@/components/admin/PasswordChange';
-import { authApi } from '@/lib/api';
-import type { Administrator, ApiError } from '@/types';
-import { Card, Badge } from '@/components/ui';
+
+interface SettingsData {
+  siteName?: string;
+  siteDescription?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  zalo?: string;
+  facebook?: string;
+  youtube?: string;
+  instagram?: string;
+  workingHours?: string;
+  googleMapsUrl?: string;
+}
 
 export default function SettingsPage() {
-  const { administrator: authAdmin } = useAuth();
-  const [administrator, setAdministrator] = useState<Administrator | null>(null);
+  const snackbar = useSnackbar();
+  const [settings, setSettings] = useState<SettingsData>({});
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
 
   useEffect(() => {
-    const fetchAdministrator = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await authApi.me();
-        setAdministrator(data);
-      } catch (err) {
-        const apiError = err as ApiError;
-        console.error('Failed to fetch administrator info:', apiError);
-        setError(apiError.message || 'Không thể tải thông tin quản trị viên');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAdministrator();
+    fetchSettings();
   }, []);
 
-  const tabs = [
-    {
-      id: 'profile' as const,
-      name: 'Thông tin cá nhân',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      ),
-    },
-    {
-      id: 'security' as const,
-      name: 'Đổi mật khẩu',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
-      ),
-    },
-  ];
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get('/settings');
+      setSettings(response.data);
+    } catch (err: any) {
+      setError(err.message || 'Không thể tải cài đặt');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      setError(null);
+      await api.patch('/settings', settings);
+      snackbar.success('Cài đặt đã được cập nhật thành công!');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message || 'Có lỗi xảy ra';
+      setError(errorMsg);
+      snackbar.error(errorMsg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleChange = (field: keyof SettingsData, value: string) => {
+    setSettings((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
     <ProtectedRoute>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
-        {/* Page header */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
+        {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Cài đặt</h1>
-          <p className="text-base text-gray-600">
-            Quản lý thông tin tài khoản và cài đặt bảo mật
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    flex items-center gap-2 py-4 px-1 border-b-2 font-semibold text-sm transition-colors cursor-pointer
-                    ${
-                      activeTab === tab.id
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }
-                  `}
-                >
-                  {tab.icon}
-                  {tab.name}
-                </button>
-              ))}
-            </nav>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
+              <SettingsIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Thông tin chung</h1>
+              <p className="text-base text-gray-600">
+                Quản lý thông tin liên hệ và mạng xã hội của website
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Tab Content */}
-        {activeTab === 'profile' && (
-          <div className="space-y-6">
-            {/* Profile Card */}
-            <Card variant="elevated" padding="none">
-              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-primary-50 to-white">
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30">
-                    <span className="text-white font-bold text-3xl">
-                      {administrator?.username?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {administrator?.username}
-                    </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {administrator?.email}
-                    </p>
-                    <Badge variant="primary" size="sm" className="mt-2">
-                      Quản trị viên
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6">
-                {loading ? (
-                  <div className="space-y-4 animate-pulse">
-                    <div>
-                      <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
-                      <div className="h-6 bg-gray-200 rounded w-48"></div>
-                    </div>
-                    <div>
-                      <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
-                      <div className="h-6 bg-gray-200 rounded w-64"></div>
-                    </div>
-                  </div>
-                ) : error ? (
-                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-                    <div className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                      <p className="text-sm text-red-800">{error}</p>
-                    </div>
-                  </div>
-                ) : administrator ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Tên đăng nhập
-                        </label>
-                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          <span className="text-base font-medium text-gray-900">
-                            {administrator.username}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Email
-                        </label>
-                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-base font-medium text-gray-900">
-                            {administrator.email}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {administrator.lastLoginAt && (
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Đăng nhập lần cuối
-                        </label>
-                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="text-base font-medium text-gray-900">
-                            {new Date(administrator.lastLoginAt).toLocaleString('vi-VN', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-              </div>
-            </Card>
+        {/* Error message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
 
-        {activeTab === 'security' && (
-          <div>
-            <PasswordChange />
+        {/* Settings Form */}
+        {loading ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            </div>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Thông tin website */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+                Thông tin website
+              </h2>
+              <div className="space-y-4">
+                <Input
+                  label="Tên website"
+                  value={settings.siteName || ''}
+                  onChange={(e) => handleChange('siteName', e.target.value)}
+                  placeholder="Vật liệu xây dựng ABC"
+                />
+                <Textarea
+                  label="Mô tả website"
+                  value={settings.siteDescription || ''}
+                  onChange={(e) => handleChange('siteDescription', e.target.value)}
+                  placeholder="Cung cấp vật liệu xây dựng chất lượng cao..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            {/* Thông tin liên hệ */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Thông tin liên hệ
+              </h2>
+              <div className="space-y-4">
+                <Textarea
+                  label="Địa chỉ"
+                  value={settings.address || ''}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                  placeholder="123 Đường ABC, Quận XYZ, TP. HCM"
+                  rows={2}
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Email"
+                    type="email"
+                    value={settings.email || ''}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    placeholder="contact@example.com"
+                  />
+                  <Input
+                    label="Số điện thoại"
+                    value={settings.phone || ''}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    placeholder="0912345678"
+                  />
+                </div>
+                <Input
+                  label="Zalo"
+                  value={settings.zalo || ''}
+                  onChange={(e) => handleChange('zalo', e.target.value)}
+                  placeholder="0912345678"
+                  helperText="Số điện thoại Zalo để khách hàng liên hệ"
+                />
+                <Textarea
+                  label="Giờ làm việc"
+                  value={settings.workingHours || ''}
+                  onChange={(e) => handleChange('workingHours', e.target.value)}
+                  placeholder="Thứ 2 - Thứ 6: 8:00 - 17:00&#10;Thứ 7: 8:00 - 12:00&#10;Chủ nhật: Nghỉ"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            {/* Mạng xã hội */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                </svg>
+                Mạng xã hội
+              </h2>
+              <div className="space-y-4">
+                <Input
+                  label="Facebook"
+                  value={settings.facebook || ''}
+                  onChange={(e) => handleChange('facebook', e.target.value)}
+                  placeholder="https://facebook.com/yourpage"
+                  helperText="Link đến trang Facebook của bạn"
+                />
+                <Input
+                  label="YouTube"
+                  value={settings.youtube || ''}
+                  onChange={(e) => handleChange('youtube', e.target.value)}
+                  placeholder="https://youtube.com/@yourchannel"
+                  helperText="Link đến kênh YouTube của bạn"
+                />
+                <Input
+                  label="Instagram"
+                  value={settings.instagram || ''}
+                  onChange={(e) => handleChange('instagram', e.target.value)}
+                  placeholder="https://instagram.com/yourprofile"
+                  helperText="Link đến trang Instagram của bạn"
+                />
+              </div>
+            </div>
+
+            {/* Google Maps */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Bản đồ
+              </h2>
+              <div className="space-y-4">
+                <Textarea
+                  label="Google Maps Embed URL"
+                  value={settings.googleMapsUrl || ''}
+                  onChange={(e) => handleChange('googleMapsUrl', e.target.value)}
+                  placeholder="https://www.google.com/maps/embed?pb=..."
+                  rows={3}
+                  helperText="Link nhúng Google Maps (Share → Embed a map → Copy HTML)"
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={fetchSettings}
+                disabled={submitting}
+              >
+                Hủy thay đổi
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Đang lưu...' : 'Lưu cài đặt'}
+              </Button>
+            </div>
+          </form>
         )}
       </div>
     </ProtectedRoute>
