@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Phone, Mail, ChevronDown } from 'lucide-react';
+import { Menu, X, Phone, Mail, ChevronDown, Search, ShoppingCart } from 'lucide-react';
 import { api } from '@/lib/api';
+import { getCartItemCount } from '@/lib/cart';
 
 interface Category {
   _id: string;
@@ -20,6 +21,9 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isNewsOpen, setIsNewsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [cartCount, setCartCount] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [submenuPosition, setSubmenuPosition] = useState<{ top: number; left: number } | null>(null);
@@ -27,10 +31,12 @@ export default function Header() {
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const menuLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const newsLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
+    setCartCount(getCartItemCount());
   }, []);
 
   useEffect(() => {
@@ -46,6 +52,40 @@ export default function Header() {
       .then(res => setCategories(res.data || []))
       .catch(err => console.error('Failed to fetch categories:', err));
   }, []);
+
+  // Update cart count when cart changes
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      setCartCount(getCartItemCount());
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, []);
+
+  // Close search when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    if (isSearchOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSearchOpen]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`;
+    }
+  };
 
   const handleItemHover = (categoryId: string, event: React.MouseEvent<HTMLAnchorElement>) => {
     if (leaveTimeoutRef.current) {
@@ -260,8 +300,44 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="hidden lg:block">
-            <Link href="/contact" className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/30 hover:shadow-xl uppercase text-sm">
+          <div className="hidden lg:flex items-center gap-3">
+            <div className="relative" ref={searchRef}>
+              <button 
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className="p-2 rounded-lg text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-colors"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+
+              {/* Search Dropdown */}
+              {isSearchOpen && (
+                <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 p-4 z-50">
+                  <form onSubmit={handleSearch}>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Tìm kiếm sản phẩm..."
+                        className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        autoFocus
+                      />
+                      <button
+                        type="submit"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                      >
+                        <Search className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </form>
+                  <div className="mt-3 text-xs text-gray-500">
+                    Nhấn Enter hoặc click icon để tìm kiếm
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Link href="/contact" className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/30 hover:shadow-xl uppercase text-sm whitespace-nowrap">
               <Phone className="w-4 h-4" />
               <span>Liên hệ ngay</span>
             </Link>
