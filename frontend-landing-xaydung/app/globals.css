@@ -3,7 +3,7 @@
 @theme inline {
   --color-background: #ffffff;
   --color-foreground: #171717;
-  --font-sans: var(--font-tx-tech), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
   
   /* Primary color palette - #2a6941 */
   --color-primary-50: #f0f7f3;
@@ -32,7 +32,7 @@ html {
 body {
   background: #ffffff;
   color: #171717;
-  font-family: var(--font-tx-tech), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Custom animations */
