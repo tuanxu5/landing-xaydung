@@ -62,12 +62,24 @@ export default function ProductsPage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Sản phẩm</h1>
-          <p className="text-xl text-primary-100">
-            Khám phá bộ sưu tập vật liệu xây dựng chất lượng cao
-          </p>
+      <section className="relative bg-primary-700 text-white overflow-hidden" style={{ minHeight: '350px' }}>
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="/images/image-banner.jpg" 
+            alt="Products background" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-900/40 via-primary-800/35 to-primary-700/30"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 relative z-10 flex items-center" style={{ minHeight: '350px' }}>
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Sản phẩm</h1>
+            <p className="text-xl text-primary-100">
+              Khám phá bộ sưu tập vật liệu xây dựng chất lượng cao
+            </p>
+          </div>
         </div>
       </section>
 

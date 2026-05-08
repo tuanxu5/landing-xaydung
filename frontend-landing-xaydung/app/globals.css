@@ -5,17 +5,17 @@
   --color-foreground: #171717;
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
   
-  /* Primary color palette - #2a6941 */
-  --color-primary-50: #f0f7f3;
-  --color-primary-100: #d9ebe0;
-  --color-primary-200: #b3d7c1;
-  --color-primary-300: #8cc3a2;
-  --color-primary-400: #5ea87a;
-  --color-primary-500: #2a6941;
-  --color-primary-600: #245a38;
-  --color-primary-700: #1e4a2f;
-  --color-primary-800: #183b26;
-  --color-primary-900: #12301f;
+  /* Primary color palette - #173e72 (Navy Blue) */
+  --color-primary-50: #e8f1fb;
+  --color-primary-100: #d1e3f7;
+  --color-primary-200: #a3c7ef;
+  --color-primary-300: #75abe7;
+  --color-primary-400: #478fdf;
+  --color-primary-500: #173e72;
+  --color-primary-600: #173e72;
+  --color-primary-700: #12325c;
+  --color-primary-800: #0e2646;
+  --color-primary-900: #091a30;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -91,8 +91,8 @@ body {
 }
 
 .dropdown-link:hover {
-  background-color: #f0f7f3;
-  color: #2a6941;
+  background-color: #e8f1fb;
+  color: #173e72;
 }
 
 .dropdown-submenu {
@@ -117,6 +117,6 @@ body {
 }
 
 .dropdown-sublink:hover {
-  background-color: #f0f7f3;
-  color: #2a6941;
+  background-color: #e8f1fb;
+  color: #173e72;
 }
