@@ -1,0 +1,109 @@
+# Kiro Ignore File
+# Prevents AI from reading unnecessary files to save tokens
+
+# Dependencies
+**/node_modules/**
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+
+# Build outputs
+**/dist/**
+**/build/**
+**/.next/**
+**/out/**
+**/.nuxt/**
+**/.output/**
+
+# Coverage reports
+**/coverage/**
+**/.nyc_output/**
+
+# Environment files (contain secrets)
+**/.env
+**/.env.local
+**/.env.*.local
+
+# IDE files
+**/.vscode/**
+**/.idea/**
+**/.DS_Store
+**/*.swp
+**/*.swo
+**/desktop.ini
+
+# Git
+**/.git/**
+**/.gitignore
+
+# Logs
+**/logs/**
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/lerna-debug.log*
+
+# Cache
+**/.cache/**
+**/.parcel-cache/**
+**/.eslintcache
+**/.stylelintcache
+
+# Testing
+**/__tests__/**
+**/*.test.ts
+**/*.test.tsx
+**/*.test.js
+**/*.test.jsx
+**/*.spec.ts
+**/*.spec.tsx
+**/*.spec.js
+**/*.spec.jsx
+
+# Documentation (read only when needed)
+**/README.md
+**/CHANGELOG.md
+**/LICENSE
+**/CONTRIBUTING.md
+
+# Static assets (images, fonts, etc.)
+**/public/images/**
+**/public/fonts/**
+**/uploads/**
+**/assets/images/**
+**/assets/fonts/**
+
+# Generated files
+**/tsconfig.tsbuildinfo
+**/*.d.ts.map
+
+# Temporary files
+**/tmp/**
+**/temp/**
+**/.tmp/**
+
+# Database files
+**/*.sqlite
+**/*.db
+
+# Backup files
+**/*.backup
+**/*.bak
+**/*.old
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Specific to this project
+backend-landing-xaydung/uploads/**
+frontend-landing-xaydung/public/images/**
+frontend-landing-xaydung/.next/**
+backend-landing-xaydung/dist/**
+
+# Keep these documentation files accessible
+!.kiro/steering/**
+!**/RULES.md
+!**/AGENTS.md
+!**/IMAGE_URL_UPDATE_COMPLETE.md
