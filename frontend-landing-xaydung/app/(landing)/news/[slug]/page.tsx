@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, ArrowLeft, Calendar, Clock, Tag, Share2, Link2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { getImageUrl } from '@/lib/utils';
 
 interface Post {
   _id: string;
@@ -203,7 +204,7 @@ export default function NewsDetailPage() {
               {post.featuredImage && (
                 <div className="aspect-video bg-gray-100 rounded-3xl overflow-hidden shadow-xl mb-8">
                   <img
-                    src={post.featuredImage}
+                    src={getImageUrl(post.featuredImage)}
                     alt={post.title}
                     className="w-full h-full object-cover"
                   />
@@ -292,7 +293,7 @@ export default function NewsDetailPage() {
                           <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
                             {relatedPost.featuredImage ? (
                               <img
-                                src={relatedPost.featuredImage}
+                                src={getImageUrl(relatedPost.featuredImage)}
                                 alt={relatedPost.title}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                               />

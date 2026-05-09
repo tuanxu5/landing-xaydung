@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Package, Phone } from 'lucide-react';
+import { getImageUrl } from '@/lib/utils';
 
 interface ProductCardProps {
   _id: string;
@@ -24,7 +25,7 @@ export default function ProductCard({ _id, name, slug, thumbnail, category }: Pr
       <div className="aspect-square bg-gray-100 overflow-hidden relative">
         {thumbnail ? (
           <img
-            src={thumbnail}
+            src={getImageUrl(thumbnail)}
             alt={name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />

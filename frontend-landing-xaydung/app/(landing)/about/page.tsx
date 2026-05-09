@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Users, Award, MapPin, Phone, Mail, Clock, CheckCircle2, Target, Eye, Lightbulb, ExternalLink } from 'lucide-react';
 import { api } from '@/lib/api';
+import { getImageUrl } from '@/lib/utils';
 
 interface TeamMember {
   _id: string;
@@ -369,7 +370,7 @@ export default function AboutPage() {
                     {/* Image with Overlay */}
                     <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                       <img
-                        src={member.avatar}
+                        src={getImageUrl(member.avatar)}
                         alt={member.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
@@ -438,7 +439,7 @@ export default function AboutPage() {
                     <div className="relative overflow-hidden" style={{ aspectRatio: '1 / 1.414' }}>
                       {cert.fileType === 'image' ? (
                         <img
-                          src={cert.fileUrl}
+                          src={getImageUrl(cert.fileUrl)}
                           alt={cert.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
@@ -513,7 +514,7 @@ export default function AboutPage() {
               <div className="relative bg-gray-100" style={{ aspectRatio: '1 / 1.414' }}>
                 {certificates[selectedCertIndex].fileType === 'image' ? (
                   <img
-                    src={certificates[selectedCertIndex].fileUrl}
+                    src={getImageUrl(certificates[selectedCertIndex].fileUrl)}
                     alt={certificates[selectedCertIndex].title}
                     className="w-full h-full object-contain"
                   />
@@ -613,7 +614,7 @@ export default function AboutPage() {
                         <td className="px-6 py-4">
                           <div className="w-20 h-20 bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
                             <img
-                              src={brand.logo}
+                              src={getImageUrl(brand.logo)}
                               alt={brand.name}
                               className="w-full h-full object-cover"
                             />

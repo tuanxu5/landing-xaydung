@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Search, MapPin, Briefcase, Calendar, Users, ChevronRight } from 'lucide-react';
+import { getImageUrl } from '@/lib/utils';
 
 interface Recruitment {
   _id: string;
@@ -154,7 +155,7 @@ export default function RecruitmentsPage() {
                     <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700">
                       {recruitment.banner ? (
                         <img
-                          src={recruitment.banner}
+                          src={getImageUrl(recruitment.banner)}
                           alt={recruitment.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />

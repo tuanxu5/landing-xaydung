@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight } from 'lucide-react';
 import { getCartItems, updateCartItemQuantity, removeFromCart, clearCart, getCartTotal, formatCurrency, CartItem } from '@/lib/cart';
+import { getImageUrl } from '@/lib/utils';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -101,7 +102,7 @@ export default function CartPage() {
                     >
                       {item.thumbnail ? (
                         <img
-                          src={item.thumbnail}
+                          src={getImageUrl(item.thumbnail)}
                           alt={item.name}
                           className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                         />

@@ -106,30 +106,11 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* Search Section */}
-      <section className="py-6 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="relative max-w-2xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm sản phẩm..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* Main Content - Sidebar + Products Grid */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
-            {/* Left Sidebar - Categories (wider and more beautiful) */}
+            {/* Left Sidebar - Categories */}
             <div className="lg:col-span-3">
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden sticky top-24 border border-gray-100">
                 {/* Header */}
@@ -145,8 +126,8 @@ export default function ProductsPage() {
                   </div>
                 </div>
 
-                {/* Categories List */}
-                <div className="p-4 max-h-[calc(100vh-220px)] overflow-y-auto custom-scrollbar">
+                {/* Categories List - Scrollable with hidden scrollbar */}
+                <div className="p-4 max-h-[500px] overflow-y-auto scrollbar-hide">
                   {/* All Products */}
                   <button
                     onClick={() => {
@@ -243,7 +224,7 @@ export default function ProductsPage() {
 
                         {/* Level 2 - Child Categories */}
                         {isExpanded && level2Children.length > 0 && (
-                          <div className="ml-6 mt-1.5 space-y-1.5 relative">
+                          <div className="ml-6 mt-1.5 space-y-1.5 relative pl-4">
                             {/* Vertical line */}
                             <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary-200 via-primary-100 to-transparent"></div>
                             
@@ -303,7 +284,7 @@ export default function ProductsPage() {
 
                                   {/* Level 3 - Grandchild Categories */}
                                   {isChildExpanded && level3Children.length > 0 && (
-                                    <div className="ml-5 mt-1 space-y-1 relative">
+                                    <div className="ml-5 mt-1 space-y-1 relative pl-4">
                                       {/* Vertical line for level 3 */}
                                       <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary-100 to-transparent"></div>
                                       
@@ -356,6 +337,23 @@ export default function ProductsPage() {
 
             {/* Right Content - Products Grid */}
             <div className="lg:col-span-7">
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm sản phẩm..."
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setPage(1);
+                    }}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all bg-white shadow-sm"
+                  />
+                </div>
+              </div>
+
               {loading ? (
                 <div className="flex items-center justify-center py-20">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -382,16 +380,14 @@ export default function ProductsPage() {
                     ))}
                   </div>
 
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <Pagination
-                      currentPage={page}
-                      totalPages={totalPages}
-                      onPageChange={setPage}
-                      total={total}
-                      limit={limit}
-                    />
-                  )}
+                  {/* Pagination - Always show */}
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    total={total}
+                    limit={limit}
+                  />
                 </>
               )}
             </div>

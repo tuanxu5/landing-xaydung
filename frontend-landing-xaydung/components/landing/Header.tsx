@@ -26,9 +26,12 @@ export default function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [hoveredLevel2Item, setHoveredLevel2Item] = useState<string | null>(null);
   const [submenuPosition, setSubmenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [level3SubmenuPosition, setLevel3SubmenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [mounted, setMounted] = useState(false);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const level2LeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const menuLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const newsLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -109,7 +112,45 @@ export default function Header() {
     leaveTimeoutRef.current = setTimeout(() => {
       setHoveredItem(null);
       setSubmenuPosition(null);
+      setHoveredLevel2Item(null);
+      setLevel3SubmenuPosition(null);
     }, 200);
+  };
+
+  const handleLevel2ItemHover = (categoryId: string, event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (level2LeaveTimeoutRef.current) {
+      clearTimeout(level2LeaveTimeoutRef.current);
+      level2LeaveTimeoutRef.current = null;
+    }
+    if (menuLeaveTimeoutRef.current) {
+      clearTimeout(menuLeaveTimeoutRef.current);
+      menuLeaveTimeoutRef.current = null;
+    }
+    
+    setHoveredLevel2Item(categoryId);
+    const rect = event.currentTarget.getBoundingClientRect();
+    setLevel3SubmenuPosition({
+      top: rect.top,
+      left: rect.right + 4,
+    });
+  };
+
+  const handleLevel2ItemLeave = () => {
+    level2LeaveTimeoutRef.current = setTimeout(() => {
+      setHoveredLevel2Item(null);
+      setLevel3SubmenuPosition(null);
+    }, 200);
+  };
+
+  const handleLevel3SubmenuEnter = () => {
+    if (level2LeaveTimeoutRef.current) {
+      clearTimeout(level2LeaveTimeoutRef.current);
+      level2LeaveTimeoutRef.current = null;
+    }
+    if (menuLeaveTimeoutRef.current) {
+      clearTimeout(menuLeaveTimeoutRef.current);
+      menuLeaveTimeoutRef.current = null;
+    }
   };
 
   const handleSubmenuEnter = (categoryId: string) => {
@@ -121,6 +162,10 @@ export default function Header() {
       clearTimeout(menuLeaveTimeoutRef.current);
       menuLeaveTimeoutRef.current = null;
     }
+    if (level2LeaveTimeoutRef.current) {
+      clearTimeout(level2LeaveTimeoutRef.current);
+      level2LeaveTimeoutRef.current = null;
+    }
     setHoveredItem(categoryId);
     setIsProductsOpen(true);
   };
@@ -130,6 +175,8 @@ export default function Header() {
       setIsProductsOpen(false);
       setHoveredItem(null);
       setSubmenuPosition(null);
+      setHoveredLevel2Item(null);
+      setLevel3SubmenuPosition(null);
     }, 200);
   };
 
@@ -259,9 +306,9 @@ export default function Header() {
 
                   {/* Products Dropdown */}
                   {item.dropdownType === 'products' && isProductsOpen && categories.length > 0 && (
-                    <div className="dropdown-content">
-                      {categories.map((category) => (
-                        <div key={category._id} className="dropdown-item">
+                    <div className="dropdown-content max-h-[500px] overflow-y-auto scrollbar-hide">
+                      {categories.map((category, idx) => (
+                        <div key={category._id} className={`dropdown-item ${idx > 0 ? 'mt-1' : ''}`}>
                           <Link 
                             href={`/products?category=${category._id}`} 
                             className="dropdown-link"
@@ -360,6 +407,8 @@ export default function Header() {
               top: `${submenuPosition.top}px`,
               left: `${submenuPosition.left}px`,
               minWidth: '16rem',
+              maxHeight: '500px',
+              overflowY: 'auto',
               backgroundColor: 'white',
               borderRadius: '12px',
               boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
@@ -367,32 +416,111 @@ export default function Header() {
               padding: '8px 0',
               zIndex: 9999,
             }}
+            className="scrollbar-hide"
             onMouseEnter={() => handleSubmenuEnter(hoveredItem)}
-            onMouseLeave={handleMenuLeave}
+            onMouseLeave={() => {
+              handleMenuLeave();
+              handleLevel2ItemLeave();
+            }}
           >
-            {category?.children?.map((child) => (
-              <Link 
-                key={child._id} 
-                href={`/products?category=${child._id}`}
-                style={{
-                  display: 'block',
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  color: '#374151',
-                  textTransform: 'uppercase',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f0f7f3';
-                  e.currentTarget.style.color = '#2a6941';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = '#374151';
-                }}
-              >
-                • {child.name}
-              </Link>
+            {category?.children?.map((child, idx) => (
+              <div key={child._id} style={{ marginTop: idx > 0 ? '4px' : '0' }}>
+                <Link 
+                  href={`/products?category=${child._id}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    color: '#374151',
+                    textTransform: 'uppercase',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#e8f1fb';
+                    e.currentTarget.style.color = '#173e72';
+                    if (child.children && child.children.length > 0) {
+                      handleLevel2ItemHover(child._id, e);
+                    } else {
+                      // Nếu không có children, đóng submenu cấp 3
+                      setHoveredLevel2Item(null);
+                      setLevel3SubmenuPosition(null);
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#374151';
+                    // Chỉ trigger leave nếu không có children hoặc không hover vào submenu cấp 3
+                    if (!child.children || child.children.length === 0) {
+                      handleLevel2ItemLeave();
+                    }
+                  }}
+                >
+                  <span>• {child.name}</span>
+                  {child.children && child.children.length > 0 && (
+                    <ChevronDown style={{ width: '16px', height: '16px', transform: 'rotate(-90deg)' }} />
+                  )}
+                </Link>
+              </div>
+            ))}
+          </div>,
+          document.body
+        );
+      })()}
+
+      {/* Submenu cấp 3 */}
+      {mounted && hoveredLevel2Item && level3SubmenuPosition && (() => {
+        const parentCategory = categories.find(c => c._id === hoveredItem);
+        const level2Category = parentCategory?.children?.find(c => c._id === hoveredLevel2Item);
+        
+        return createPortal(
+          <div 
+            style={{
+              position: 'fixed',
+              top: `${level3SubmenuPosition.top}px`,
+              left: `${level3SubmenuPosition.left}px`,
+              minWidth: '16rem',
+              maxHeight: '500px',
+              overflowY: 'auto',
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+              border: '1px solid #e5e7eb',
+              padding: '8px 0',
+              zIndex: 10000,
+            }}
+            className="scrollbar-hide"
+            onMouseEnter={handleLevel3SubmenuEnter}
+            onMouseLeave={() => {
+              handleLevel2ItemLeave();
+              handleMenuLeave();
+            }}
+          >
+            {level2Category?.children?.map((grandchild, idx) => (
+              <div key={grandchild._id} style={{ marginTop: idx > 0 ? '4px' : '0' }}>
+                <Link 
+                  href={`/products?category=${grandchild._id}`}
+                  style={{
+                    display: 'block',
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    color: '#374151',
+                    textTransform: 'uppercase',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#e8f1fb';
+                    e.currentTarget.style.color = '#173e72';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#374151';
+                  }}
+                >
+                  └ {grandchild.name}
+                </Link>
+              </div>
             ))}
           </div>,
           document.body

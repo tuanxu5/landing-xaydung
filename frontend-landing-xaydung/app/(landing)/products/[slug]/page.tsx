@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Package, ArrowLeft, Tag, Share2, Phone, Award } from 'lucide-react';
 import { api } from '@/lib/api';
+import { getImageUrl } from '@/lib/utils';
 
 interface Product {
   _id: string;
@@ -93,7 +94,7 @@ export default function ProductDetailPage() {
               {/* Main Image */}
               <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
                 {selectedImage ? (
-                  <img src={selectedImage} alt={product.name} className="w-full h-full object-cover" />
+                  <img src={getImageUrl(selectedImage)} alt={product.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Package className="w-24 h-24 text-gray-300" />
@@ -112,7 +113,7 @@ export default function ProductDetailPage() {
                         selectedImage === img ? 'border-primary-600 ring-2 ring-primary-200' : 'border-transparent hover:border-gray-300'
                       }`}
                     >
-                      <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={getImageUrl(img)} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>

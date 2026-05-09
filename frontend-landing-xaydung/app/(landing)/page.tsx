@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, CheckCircle, Package, TrendingUp, Shield, Clock, ChevronDown, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/lib/api';
 import ProductCard from '@/components/landing/ProductCard';
+import { getImageUrl } from '@/lib/utils';
 
 interface Product {
   _id: string;
@@ -409,7 +410,7 @@ export default function HomePage() {
                   <div className="aspect-video bg-gray-100 overflow-hidden">
                     {post.featuredImage ? (
                       <img
-                        src={post.featuredImage}
+                        src={getImageUrl(post.featuredImage)}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />

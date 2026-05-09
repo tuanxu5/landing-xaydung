@@ -58,3 +58,27 @@ export function formatDateTime(date: string | Date): string {
     minute: '2-digit',
   });
 }
+
+/**
+ * Get full image URL by adding backend domain if needed
+ * @param imagePath - Image path (can be relative or absolute URL)
+ * @returns Full image URL with backend domain
+ */
+export function getImageUrl(imagePath?: string | null): string {
+  if (!imagePath) {
+    return '/images/placeholder.jpg'; // Default placeholder
+  }
+
+  // If already a full URL (starts with http:// or https://), return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+
+  // If it's a relative path, add backend domain
+  const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+  
+  // Remove leading slash if exists to avoid double slashes
+  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  
+  return `${backendUrl}${cleanPath}`;
+}

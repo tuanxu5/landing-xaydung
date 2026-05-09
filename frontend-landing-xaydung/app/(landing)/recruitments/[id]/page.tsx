@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api, uploadApi } from '@/lib/api';
 import { MapPin, Briefcase, Calendar, Users, DollarSign, Gift, Phone, Mail, ArrowLeft, Upload, CheckCircle } from 'lucide-react';
+import { getImageUrl } from '@/lib/utils';
 
 interface Recruitment {
   _id: string;
@@ -174,7 +175,7 @@ export default function RecruitmentDetailPage() {
       {recruitment.banner && (
         <div className="relative h-80 bg-gradient-to-br from-primary-600 to-primary-800">
           <img
-            src={recruitment.banner}
+            src={getImageUrl(recruitment.banner)}
             alt={recruitment.title}
             className="w-full h-full object-cover opacity-30"
           />

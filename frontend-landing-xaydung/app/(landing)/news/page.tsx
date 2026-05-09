@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FileText, Search } from 'lucide-react';
 import { api } from '@/lib/api';
+import { getImageUrl } from '@/lib/utils';
 
 interface Post {
   _id: string;
@@ -102,7 +103,7 @@ export default function NewsPage() {
                   <div className="aspect-video bg-gray-100 overflow-hidden">
                     {post.featuredImage ? (
                       <img
-                        src={post.featuredImage}
+                        src={getImageUrl(post.featuredImage)}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
