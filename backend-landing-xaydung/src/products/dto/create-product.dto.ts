@@ -47,8 +47,18 @@ export class CreateProductDto {
   @IsOptional()
   thumbnail?: string;
 
+  @IsString()
   @IsOptional()
-  specifications?: Record<string, any>;
+  specifications?: string;
+
+  @IsString()
+  @IsOptional()
+  promotionPolicy?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  brands?: string[];
 
   @IsBoolean()
   @IsOptional()

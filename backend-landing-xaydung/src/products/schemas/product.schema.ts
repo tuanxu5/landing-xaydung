@@ -41,8 +41,14 @@ export class Product {
   @Prop()
   thumbnail?: string;
 
-  @Prop({ type: Object })
-  specifications?: Record<string, any>; // Thông số kỹ thuật
+  @Prop()
+  specifications?: string; // Thông số kỹ thuật (HTML)
+
+  @Prop()
+  promotionPolicy?: string; // Chính sách ưu đãi
+
+  @Prop({ type: [String], default: [] })
+  brands: string[]; // Thương hiệu
 
   @Prop({ default: true })
   isActive: boolean;

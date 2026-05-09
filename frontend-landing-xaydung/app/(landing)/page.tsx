@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle, Package, TrendingUp, Shield, Clock, Grid3x3, ChevronDown, Star } from 'lucide-react';
+import { ArrowRight, CheckCircle, Package, TrendingUp, Shield, Clock, ChevronDown, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/lib/api';
+import ProductCard from '@/components/landing/ProductCard';
 
 interface Product {
   _id: string;
@@ -55,6 +56,9 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [faqs, setFAQs] = useState<FAQ[]>([]);
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // Fake reviews data
   const reviews: Review[] = [
@@ -94,7 +98,7 @@ export default function HomePage() {
 
   useEffect(() => {
     // Fetch featured products
-    api.get('/products', { params: { isFeatured: true, limit: 6 } })
+    api.get('/products', { params: { isFeatured: true, limit: 12 } })
       .then(res => setFeaturedProducts(res.data.products || []))
       .catch(err => console.error('Failed to fetch products:', err));
 
@@ -123,6 +127,38 @@ export default function HomePage() {
       })
       .catch(err => console.error('Failed to fetch FAQs:', err));
   }, []);
+
+  // Check scroll position for slider buttons
+  const checkScrollButtons = () => {
+    if (sliderRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollButtons();
+    const slider = sliderRef.current;
+    if (slider) {
+      slider.addEventListener('scroll', checkScrollButtons);
+      window.addEventListener('resize', checkScrollButtons);
+      return () => {
+        slider.removeEventListener('scroll', checkScrollButtons);
+        window.removeEventListener('resize', checkScrollButtons);
+      };
+    }
+  }, [featuredProducts]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (sliderRef.current) {
+      const scrollAmount = sliderRef.current.clientWidth * 0.8;
+      sliderRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   return (
     <div>
@@ -170,14 +206,14 @@ export default function HomePage() {
       {categories.length > 0 && (
         <section className="relative -mt-20 md:-mt-24 z-20 mb-16">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-4">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-5">
               {/* Categories Grid - 2 rows, horizontal cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-0">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                 {categories.map((category) => (
                   <Link
                     key={category._id}
                     href={`/products?category=${category.slug}`}
-                    className="group flex items-center gap-3 p-3 rounded-xl transition-all duration-200"
+                    className="group flex items-center gap-3 rounded-xl transition-all duration-200"
                   >
                     <div className="w-16 h-16 flex-shrink-0 bg-primary-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-200">
                       <Package className="w-8 h-8 text-primary-500" />
@@ -298,41 +334,51 @@ export default function HomePage() {
             <p className="text-lg text-gray-600">Những sản phẩm được khách hàng tin dùng nhất</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {featuredProducts.map((product) => (
-              <Link
-                key={product._id}
-                href={`/products/${product.slug}`}
-                className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all overflow-hidden"
+          {/* Slider Container */}
+          <div className="relative">
+            {/* Left Button */}
+            {canScrollLeft && (
+              <button
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:bg-primary-600 hover:text-white transition-all"
               >
-                <div className="aspect-square bg-gray-100 overflow-hidden">
-                  {product.thumbnail ? (
-                    <img
-                      src={product.thumbnail}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+            )}
+
+            {/* Right Button */}
+            {canScrollRight && (
+              <button
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:bg-primary-600 hover:text-white transition-all"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            )}
+
+            {/* Products Slider */}
+            <div
+              ref={sliderRef}
+              className="overflow-x-auto scrollbar-hide scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <div className="flex gap-6" style={{ width: 'max-content' }}>
+                {featuredProducts.map((product) => (
+                  <div key={product._id} className="w-[280px] flex-shrink-0">
+                    <ProductCard
+                      _id={product._id}
+                      name={product.name}
+                      slug={product.slug}
+                      thumbnail={product.thumbnail}
+                      category={product.category}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">
-                      <Package className="w-20 h-20 text-primary-400" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-6">
-                  <div className="text-xs font-semibold text-primary-600 mb-2">{product.category?.name || 'Chưa phân loại'}</div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center text-primary-600 font-semibold text-sm">
-                    <span>Xem chi tiết</span>
-                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                   </div>
-                </div>
-              </Link>
-            ))}
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="text-center">
+          <div className="text-center mt-12">
             <Link
               href="/products"
               className="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all shadow-lg"
