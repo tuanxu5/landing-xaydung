@@ -112,8 +112,8 @@ export default function BrandsTab() {
       let logoUrl = formData.logo;
       if (logoFile) {
         const uploadResult = await uploadApi.uploadImage(logoFile);
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-        logoUrl = `${baseUrl}${uploadResult.path}`;
+        // Backend now returns full URL
+        logoUrl = uploadResult.url || uploadResult.path;
       }
 
       const data = { ...formData, logo: logoUrl };

@@ -162,8 +162,8 @@ export default function EditRecruitmentPage() {
         setUploadingBanner(true);
         try {
           const uploadResult = await uploadApi.uploadImage(bannerFile);
-          const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-          bannerUrl = `${baseUrl}${uploadResult.path}`;
+          // Backend now returns full URL
+          bannerUrl = uploadResult.url || uploadResult.path;
         } catch (uploadError: any) {
           snackbar.error(uploadError.message || 'Lỗi khi tải ảnh lên');
           return;

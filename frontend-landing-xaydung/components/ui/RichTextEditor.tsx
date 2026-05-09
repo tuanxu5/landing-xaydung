@@ -1,12 +1,16 @@
 'use client';
 
 import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
 import { uploadApi } from '@/lib/api';
 import ResizableImageNode from './ResizableImageNode';
 import {
@@ -30,6 +34,7 @@ import {
   AlignRight,
   AlignJustify,
   Upload,
+  Table as TableIcon,
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -99,6 +104,23 @@ export default function RichTextEditor({
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: 'table-auto border-collapse w-full my-4',
+        },
+      }),
+      TableRow,
+      TableHeader.configure({
+        HTMLAttributes: {
+          class: 'bg-primary-50 border border-primary-200 px-4 py-2 text-left font-semibold text-gray-900',
+        },
+      }),
+      TableCell.configure({
+        HTMLAttributes: {
+          class: 'border border-gray-300 px-4 py-2',
+        },
+      }),
     ],
     content: value,
     immediatelyRender: false,
@@ -127,8 +149,8 @@ export default function RichTextEditor({
     try {
       setUploadingImage(true);
       const uploadResult = await uploadApi.uploadImage(file);
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-      const imageUrl = `${baseUrl}${uploadResult.path}`;
+      // Backend now returns full URL
+      const imageUrl = uploadResult.url || uploadResult.path;
       editor.chain().focus().setImage({ src: imageUrl }).run();
       setShowImageModal(false);
     } catch (error) {
@@ -342,7 +364,61 @@ export default function RichTextEditor({
                 <ImageIcon className="w-4 h-4" />
               )}
             </ToolbarButton>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+              title="Insert Table"
+            >
+              <TableIcon className="w-4 h-4" />
+            </ToolbarButton>
           </div>
+
+          {/* Table Actions (show when table is active) */}
+          {editor.isActive('table') && (
+            <div className="flex gap-1 pr-2 border-r border-gray-300">
+              <ToolbarButton
+                onClick={() => editor.chain().focus().addColumnBefore().run()}
+                title="Add Column Before"
+              >
+                <span className="text-xs font-bold">+Col←</span>
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor.chain().focus().addColumnAfter().run()}
+                title="Add Column After"
+              >
+                <span className="text-xs font-bold">+Col→</span>
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor.chain().focus().deleteColumn().run()}
+                title="Delete Column"
+              >
+                <span className="text-xs font-bold">-Col</span>
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor.chain().focus().addRowBefore().run()}
+                title="Add Row Before"
+              >
+                <span className="text-xs font-bold">+Row↑</span>
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor.chain().focus().addRowAfter().run()}
+                title="Add Row After"
+              >
+                <span className="text-xs font-bold">+Row↓</span>
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor.chain().focus().deleteRow().run()}
+                title="Delete Row"
+              >
+                <span className="text-xs font-bold">-Row</span>
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor.chain().focus().deleteTable().run()}
+                title="Delete Table"
+              >
+                <span className="text-xs font-bold text-red-600">×Table</span>
+              </ToolbarButton>
+            </div>
+          )}
 
           {/* Undo/Redo */}
           <div className="flex gap-1">
@@ -376,7 +452,7 @@ export default function RichTextEditor({
         }
         
         .ProseMirror p.is-editor-empty:first-child::before {
-          content: attr(data-placeholder);
+          content: "${placeholder}";
           float: left;
           color: #adb5bd;
           pointer-events: none;
@@ -402,6 +478,82 @@ export default function RichTextEditor({
         /* Ensure node views are selectable */
         .ProseMirror .ProseMirror-selectednode {
           outline: none;
+        }
+
+        /* Table Styles */
+        .ProseMirror table {
+          border-collapse: collapse;
+          table-layout: fixed;
+          width: 100%;
+          margin: 1.5rem 0;
+          overflow: hidden;
+          border-radius: 8px;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .ProseMirror table td,
+        .ProseMirror table th {
+          min-width: 1em;
+          border: 1px solid #d1d5db;
+          padding: 0.75rem 1rem;
+          vertical-align: top;
+          box-sizing: border-box;
+          position: relative;
+        }
+
+        .ProseMirror table th {
+          font-weight: 600;
+          text-align: left;
+          background-color: #eff6ff;
+          color: #1e40af;
+          border-color: #bfdbfe;
+        }
+
+        .ProseMirror table td {
+          background-color: white;
+        }
+
+        .ProseMirror table tr:hover td {
+          background-color: #f9fafb;
+        }
+
+        .ProseMirror table .selectedCell {
+          background-color: #dbeafe;
+        }
+
+        .ProseMirror table .column-resize-handle {
+          position: absolute;
+          right: -2px;
+          top: 0;
+          bottom: -2px;
+          width: 4px;
+          background-color: #3b82f6;
+          pointer-events: none;
+        }
+
+        .ProseMirror table p {
+          margin: 0;
+        }
+
+        /* Striped table variant */
+        .ProseMirror table.table-striped tbody tr:nth-child(even) td {
+          background-color: #f9fafb;
+        }
+
+        /* Bordered table variant */
+        .ProseMirror table.table-bordered {
+          border: 2px solid #d1d5db;
+        }
+
+        .ProseMirror table.table-bordered td,
+        .ProseMirror table.table-bordered th {
+          border: 1px solid #d1d5db;
+        }
+
+        /* Compact table variant */
+        .ProseMirror table.table-compact td,
+        .ProseMirror table.table-compact th {
+          padding: 0.5rem 0.75rem;
         }
       `}</style>
 

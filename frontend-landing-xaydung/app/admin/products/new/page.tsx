@@ -61,7 +61,8 @@ export default function NewProductPage() {
       });
       
       const results = await Promise.all(uploadPromises);
-      const imageUrls = results.map(result => result.path);
+      // Backend now returns full URL in 'url' field
+      const imageUrls = results.map(result => result.url || result.path);
       
       setFormData(prev => ({
         ...prev,

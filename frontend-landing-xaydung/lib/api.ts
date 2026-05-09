@@ -248,7 +248,13 @@ export const uploadApi = {
   /**
    * Upload an image file
    */
-  uploadImage: async (file: File): Promise<{ filename: string; path: string; size: number; mimetype: string }> => {
+  uploadImage: async (file: File): Promise<{ 
+    filename: string; 
+    path: string; 
+    url: string; // Full URL from backend
+    size: number; 
+    mimetype: string;
+  }> => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -263,7 +269,14 @@ export const uploadApi = {
   /**
    * Upload a CV file (PDF, DOC, DOCX)
    */
-  uploadCV: async (file: File): Promise<{ filename: string; path: string; size: number; mimetype: string; originalName: string }> => {
+  uploadCV: async (file: File): Promise<{ 
+    filename: string; 
+    path: string; 
+    url: string; // Full URL from backend
+    size: number; 
+    mimetype: string; 
+    originalName: string;
+  }> => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -278,7 +291,13 @@ export const uploadApi = {
   /**
    * Upload a certificate file (PDF or Image)
    */
-  uploadCertificate: async (file: File): Promise<{ filename: string; path: string; size: number; mimetype: string }> => {
+  uploadCertificate: async (file: File): Promise<{ 
+    filename: string; 
+    path: string; 
+    url: string; // Full URL from backend
+    size: number; 
+    mimetype: string;
+  }> => {
     const formData = new FormData();
     formData.append('file', file);
 

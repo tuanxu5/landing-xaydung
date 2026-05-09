@@ -73,22 +73,71 @@ frontend-landing-xaydung/
 
 ## 🖼️ Image Handling
 
-### Image URL Utility
-- **Function**: `getImageUrl()` in `lib/utils.ts`
-- **Purpose**: Automatically prepend backend URL to relative image paths
-- **Usage**: Wrap ALL dynamic image sources from backend
+### Upload Response Format
+Backend upload API now returns **full URLs** for convenience:
+```json
+{
+  "filename": "compressed-123456.jpg",
+  "path": "/uploads/images/compressed-123456.jpg",  // Relative path
+  "url": "http://localhost:3000/uploads/images/compressed-123456.jpg",  // Full URL
+  "size": 123456,
+  "mimetype": "image/jpeg"
+}
+```
+
+### Admin Upload
+- **Save `url` field** to database (full URL)
+- Backend automatically includes domain
+- No need to construct URLs in frontend
+
+```tsx
+// ✅ Admin upload - save full URL
+const uploadResult = await uploadApi.uploadImage(file);
+const imageUrl = uploadResult.url; // Full URL ready to use
+```
+
+### Frontend Display
+- **Use `getImageUrl()` utility** for backward compatibility
+- Handles both full URLs and relative paths
+- Located in `lib/utils.ts`
 
 ```tsx
 import { getImageUrl } from '@/lib/utils';
 
+// ✅ Works with both formats
 <img src={getImageUrl(product.thumbnail)} alt="..." />
 ```
 
-### Rules
-- ✅ **DO**: Use `getImageUrl()` for all backend images (`/uploads/...`)
-- ✅ **DO**: Keep static images unchanged (`/images/...`)
-- ✅ **DO**: Keep external URLs unchanged (`http://...`, `https://...`)
-- ❌ **DON'T**: Hardcode backend URL in components
+### How getImageUrl() Works
+```typescript
+// Full URL → return as-is
+getImageUrl('http://localhost:3000/uploads/image.jpg') 
+// → 'http://localhost:3000/uploads/image.jpg'
+
+// Relative path → prepend base URL
+getImageUrl('/uploads/image.jpg') 
+// → 'http://localhost:3000/uploads/image.jpg'
+
+// Null/undefined → placeholder
+getImageUrl(null) 
+// → '/images/placeholder.jpg'
+```
+
+### Environment Variables
+**Backend** (`.env`):
+```env
+BASE_URL=http://localhost:3000  # Used for generating full URLs
+```
+
+**Frontend** (`.env.local`):
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000  # Used by getImageUrl()
+```
+
+### Migration Notes
+- **New uploads**: Automatically get full URLs
+- **Old data**: Still works with `getImageUrl()` utility
+- **No breaking changes**: Backward compatible
 
 ## 🗂️ Categories System
 

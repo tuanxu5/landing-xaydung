@@ -187,9 +187,8 @@ export default function PostEditor({ postId, onSave }: PostEditorProps) {
         setUploadingImage(true);
         try {
           const uploadResult = await uploadApi.uploadImage(imageFile);
-          // Construct full URL for the uploaded image
-          const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-          imageUrl = `${baseUrl}${uploadResult.path}`;
+          // Backend now returns full URL
+          imageUrl = uploadResult.url || uploadResult.path;
         } catch (uploadError: any) {
           setApiError(uploadError.message || 'Lỗi khi tải ảnh lên');
           return;

@@ -112,8 +112,8 @@ export default function TeamMembersTab() {
       let avatarUrl = formData.avatar;
       if (avatarFile) {
         const uploadResult = await uploadApi.uploadImage(avatarFile);
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-        avatarUrl = `${baseUrl}${uploadResult.path}`;
+        // Backend now returns full URL
+        avatarUrl = uploadResult.url || uploadResult.path;
       }
 
       const data = { ...formData, avatar: avatarUrl };

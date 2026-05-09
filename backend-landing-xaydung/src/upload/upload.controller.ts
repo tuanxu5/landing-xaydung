@@ -15,6 +15,12 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Controller('upload')
 export class UploadController {
+  private readonly baseUrl: string;
+
+  constructor() {
+    // Get base URL from environment or use default
+    this.baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  }
   @Post('image')
   @UseGuards(AuthGuard)
   @UseInterceptors(
@@ -71,10 +77,12 @@ export class UploadController {
       // Get compressed file size
       const stats = await fs.stat(compressedPath);
 
-      // Return the compressed file path
+      // Return the full URL (includes base URL)
+      const relativePath = `/uploads/images/${compressedFilename}`;
       return {
         filename: compressedFilename,
-        path: `/uploads/images/${compressedFilename}`,
+        path: relativePath,
+        url: `${this.baseUrl}${relativePath}`, // Full URL for direct use
         size: stats.size,
         mimetype: 'image/jpeg',
       };
@@ -127,9 +135,11 @@ export class UploadController {
       throw new BadRequestException('No file uploaded');
     }
 
+    const relativePath = `/uploads/cvs/${file.filename}`;
     return {
       filename: file.filename,
-      path: `/uploads/cvs/${file.filename}`,
+      path: relativePath,
+      url: `${this.baseUrl}${relativePath}`, // Full URL for direct use
       size: file.size,
       mimetype: file.mimetype,
       originalName: file.originalname,
@@ -178,10 +188,12 @@ export class UploadController {
     }
 
     const fileType = file.mimetype === 'application/pdf' ? 'pdf' : 'image';
+    const relativePath = `/uploads/certificates/${file.filename}`;
 
     return {
       filename: file.filename,
-      path: `/uploads/certificates/${file.filename}`,
+      path: relativePath,
+      url: `${this.baseUrl}${relativePath}`, // Full URL for direct use
       size: file.size,
       mimetype: file.mimetype,
       fileType,
